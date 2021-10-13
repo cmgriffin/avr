@@ -1,27 +1,30 @@
 #include <avr/io.h>
+#include <avr/pgmspace.h>
 #include <util/delay.h>
-#include <stdio.h>
+#include <gpio.h>
 #include <uart.h>
 
-#ifndef LED_PIN
-#define LED_PIN PB5
-#endif
+GPIO_TypeDef led_pin = D13;
 
 int main(void)
 {
   UART_init();
-  char buf[32];
-  uint16_t addr = 0xAAAA;
-  for (uint16_t i = 0x8000; i; i >>= 1)
-  {
-    uint16_t anded = addr & i;
-    uint16_t logical = !!anded;
-    sprintf_P(buf, PSTR("%04x %04x %04x\n"), i, anded, logical);
-    UART_printStr(buf);
-  }
+  UART_printStr_p(PSTR("Program Start!\n"));
+  GPIO_setOutput(&led_pin);
 
   for (;;)
   {
+    GPIO_toggleValue(&led_pin);
+    UART_printStr_p(PSTR("Led is "));
+    if (GPIO_getInput(&led_pin))
+    {
+      UART_printStr_p(PSTR("ON\n"));
+    }
+    else
+    {
+      UART_printStr_p(PSTR("OFF\n"));
+    }
+    _delay_ms(1000);
   }
 
   return 0;
