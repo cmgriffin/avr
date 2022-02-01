@@ -10,21 +10,21 @@
 */
 
 #define DEBUG
+typedef void (*callback_t)(char *args);
+typedef struct cmd
+{
+    callback_t callback;
+    char *cmd_str;
+} cmd_t;
 
-#define DELIM " "
+typedef struct serial_command
+{
+    char *delimiter;
+    uint8_t n_cmds;
+    cmd_t *cmds;
 
-#define CMD_0 "A"
-#define CMD_1 "B"
-#define CMD_2 "C"
-#define CMD_3 "D"
+} serial_command_t;
 
-void callback0(char *args);
-void callback1(char *args);
-void callback2(char *args);
-void callback3(char *args);
-
-void handleSerialCommands(char *cmd);
-
-void parse_print_args(char *args);
+void handleSerialCommands(const serial_command_t *sCmd, char *cmd);
 
 #endif // SERIAL_COMMANDS_H

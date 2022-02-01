@@ -41,6 +41,27 @@ void UART_flush(void)
 		dummy = UDR0;
 }
 
+void UART_readString(char *s, uint8_t maxLength, uint8_t echo)
+{
+	uint8_t i = 0;
+	char c;
+
+	while ((c = UART_getChar()) != '\n')
+	{
+		if (i < maxLength - 2)
+		{
+			if (echo)
+				UART_sendChar(c);
+			s[i] = c;
+			i++;
+		}
+	}
+	if (echo)
+		UART_sendChar(c);
+	UART_flush();
+	s[i] = 0;
+}
+
 ISR(USART_RX_vect)
 {
 	volatile char response;
