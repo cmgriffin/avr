@@ -1,8 +1,6 @@
 #ifndef __GPIO__
 #define __GPIO__
 
-
-
 #include "global.h"
 #include <avr/io.h>
 
@@ -156,7 +154,7 @@ __attribute__((always_inline)) static inline void GPIO_setDirLogical(GPIO_TypeDe
 // Toggles the pin(s) value. Uses PINx=1 toggle function which should be faster than PORT^=1
 __attribute__((always_inline)) static inline void GPIO_toggleValue(GPIO_TypeDef *gpio)
 {
-    gpio->port->port ^= gpio->mask;
+    gpio->port->pin |= gpio->mask;
 }
 
 // Sets the pin value high
