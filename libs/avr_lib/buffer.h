@@ -14,8 +14,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <util/atomic.h>
 
-#define BUFFER_EMPTY 0
+#define BUFFER_EMPTY_VAL 0
 
 /**
  * @brief
@@ -46,7 +47,9 @@ typedef struct
  */
 static inline bool BUFFER_empty(buffer_t *b)
 {
-    return (b->num_entries == 0);
+    bool v;
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) { v = (b->num_entries == 0); }
+    return v;
 }
 
 /**
@@ -58,7 +61,9 @@ static inline bool BUFFER_empty(buffer_t *b)
  */
 static inline bool BUFFER_full(buffer_t *b)
 {
-    return (b->num_entries == b->size);
+    bool v;
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) { v = (b->num_entries == b->size); }
+    return v;
 }
 
 /**
