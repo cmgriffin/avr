@@ -1,5 +1,5 @@
-#ifndef __DEBUG__
-#define __DEBUG__
+#ifndef DEBUG_H
+#define DEBUG_H
 
 #include <stdio.h>
 #include <avr/pgmspace.h>
@@ -15,4 +15,4 @@
     }
 #endif
 
-#endif // __DEBUG__
+#endif /* DEBUG_H */

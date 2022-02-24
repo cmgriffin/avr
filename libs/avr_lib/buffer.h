@@ -90,4 +90,4 @@ uint8_t BUFFER_dequeue(buffer_t *b);
  */
 uint8_t BUFFER_peek(buffer_t *b, uint8_t offset);
 
-#endif
+#endif /* BUFFER_H */

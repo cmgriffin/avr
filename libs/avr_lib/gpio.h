@@ -1,5 +1,5 @@
-#ifndef __GPIO__
-#define __GPIO__
+#ifndef GPIO_H
+#define GPIO_H
 
 #include "global.h"
 #include <avr/io.h>
@@ -194,4 +194,4 @@ __attribute__((always_inline)) static inline uint8_t GPIO_getInput(GPIO_TypeDef 
     return gpio->port->port & gpio->mask;
 }
 
-#endif // __GPIO__
+#endif /* GPIO_H */
