@@ -1,6 +1,7 @@
 #include "uart.h"
 #include "buffer.h"
 #include "global.h"
+#include "stream.h"
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <debug.h>
@@ -27,6 +28,8 @@ static FILE uart_stream = FDEV_SETUP_STREAM(NULL, UART_getChar, _FDEV_SETUP_READ
 #elif defined(UART_INIT_STDOUT) && defined(UART_INIT_STDIN)
 static FILE uart_stream = FDEV_SETUP_STREAM(UART_putChar, UART_getChar, _FDEV_SETUP_RW);
 #endif
+
+static stream_t uart_io = STREAM_CREATE(UART_TransmitByte, UART_ReceiveByte);
 
 /**
  * @brief Initialize the UART using baud defined and enabling the tx and rx
@@ -71,7 +74,7 @@ void UART_init(void)
  *
  * @param c byte of data to send
  */
-void UART_TransmitByte(uint8_t c)
+bool UART_TransmitByte(uint8_t c, bool blocking)
 {
 #ifdef UART_TX_INTERUPT
 
@@ -81,21 +84,36 @@ void UART_TransmitByte(uint8_t c)
 		tx_busy = true;
 		loop_until_bit_is_set(UCSR0A, UDRE0);
 		UDR0 = c; /* send data */
+		return true;
 	}
 	else
 	{
 		// ISR will handle sending subsequent bytes
 		// in case the buffer is full we need to wait
-		while (BUFFER_full(&txbuff))
+		while (BUFFER_full(&txbuff) && blocking)
 		{
 			;
 		}
-		BUFFER_enqueue(&txbuff, c);
+		return BUFFER_enqueue(&txbuff, c);
 	}
 #else // not interupt driven
-	/* Wait for empty transmit buffer */
-	loop_until_bit_is_set(UCSR0A, UDRE0);
-	UDR0 = c;							 /* send data */
+	if (blocking)
+	{
+		/* Wait for empty transmit buffer */
+		loop_until_bit_is_set(UCSR0A, UDRE0);
+		UDR0 = c; /* send data */
+		return true;
+	}
+	else if (bit_is_clear(UCSR0A, UDRE0))
+	{ // buffer full and not waiting
+		return false;
+	}
+	else
+	{
+		// buffer empty
+		UDR0 = c;
+		return true;
+	}
 #endif
 }
 
@@ -105,20 +123,48 @@ void UART_TransmitByte(uint8_t c)
  *
  * @return uint8_t
  */
-uint8_t UART_ReceiveByte()
+bool UART_ReceiveByte(uint8_t *c, bool blocking)
 {
-	uint8_t c;
+
+	// TODO: could pack these into two conditions...
 #ifdef UART_RX_INTERUPT
-	while (BUFFER_empty(&rxbuff))
+	if (blocking)
 	{
-		;
+		while (BUFFER_empty(&rxbuff))
+		{
+			;
+		}
+		*c = BUFFER_dequeue(&rxbuff);
+		return true;
 	}
-	c = BUFFER_dequeue(&rxbuff);
+	else if (BUFFER_empty(&rxbuff))
+	{
+		return false;
+	}
+	else
+	{
+		*c = BUFFER_dequeue(&rxbuff);
+		return true;
+	}
+
 #else
-	loop_until_bit_is_set(UCSR0A, RXC0); /* Wait for incoming data */
-	c = UDR0;							 /* return register value */
+	if (blocking)
+	{
+		loop_until_bit_is_set(UCSR0A, RXC0); /* Wait for incoming data */
+		*c = UDR0;							 /* return register value */
+		return true;
+	}
+	else if (bit_is_clear(UCSR0A, RXC0))
+	{
+		return false;
+	}
+	else
+	{
+		*c = UDR0;
+		return true;
+	}
+
 #endif
-	return c;
 }
 
 /**
@@ -130,11 +176,7 @@ uint8_t UART_ReceiveByte()
  */
 int UART_putChar(char c, FILE *stream)
 {
-	if (c == '\n')
-		UART_putChar('\r', stream);
-
-	UART_TransmitByte((uint8_t)c);
-	return 0;
+	return STREAM_putChar(c, &uart_io, stream);
 }
 
 /**
@@ -146,54 +188,35 @@ int UART_putChar(char c, FILE *stream)
  */
 int UART_getChar(FILE *stream)
 {
-	char *cptr; // ptr to current position in the buffer when loading
 	static char buff[UART_GETCHAR_BUFFER_SIZE];
 	static char *rxptr; // ptr to the current position in the buffer when reading
-	uint8_t c;
 
-	if (!rxptr)
-	{
-		// nothing loaded up for the getChar yet
+	return STREAM_getChar(buff, UART_GETCHAR_BUFFER_SIZE, &rxptr, &uart_io, stream);
+}
 
-		for (cptr = buff; !rxptr;)
-		{
-			c = UART_ReceiveByte();
-			switch (c)
-			{
-			case '\r':
-				break;
-				// c = '\n';
-			case '\n':
-				// line has been loaded set the read pointer
-				*cptr = c;
-				UART_putChar(c, stream);
-				rxptr = buff;
-				break;
-			case '\b': // backspace
-				if (cptr > buff)
-				{
-					// only backspace if buf is not empty
-					UART_putChar('\b', stream); // move back one
-					UART_putChar(' ', stream);	// clear the char
-					UART_putChar('\b', stream); // move back
-					cptr--;
-				}
-				break;
-			default:
-				if (!(cptr == buff + UART_GETCHAR_BUFFER_SIZE - 1))
-				{
-					*cptr++ = c;
-					UART_putChar(c, stream);
-				}
-			}
-		}
-	}
-	c = *rxptr++;
-	if (c == '\n')
-	{
-		rxptr = 0;
-	}
-	return c;
+char *UART_readLine(char *s, uint8_t n, char **rxptr)
+{
+	return STREAM_readLine(s, n, rxptr, &uart_io);
+}
+
+void UART_printStr(const char *s)
+{
+	STREAM_printStr(s, &uart_io);
+}
+
+void UART_printStr_p(const char *s)
+{
+	STREAM_printStr_p(s, &uart_io);
+}
+
+void UART_print_u16(uint16_t v, uint8_t fp, bool rj, bool neg_sign)
+{
+	STREAM_print_u16(v, fp, rj, neg_sign, &uart_io);
+}
+
+void UART_print_i16(uint16_t v, uint8_t fp, bool rj)
+{
+	STREAM_print_i16(v, fp, rj, &uart_io);
 }
 
 void UART_flush(void)
