@@ -54,3 +54,6 @@ dkms.conf
 
 workspace.code-workspace
 .vscode
+
+# sandbox folder with test programs should be excluded from repo
+projects/sandbox
