@@ -186,6 +186,7 @@ int UART_putChar(char c, FILE *stream)
  * @param stream
  * @return int
  */
+#ifdef UART_GETCHAR_BUFFER_SIZE
 int UART_getChar(FILE *stream)
 {
 	static char buff[UART_GETCHAR_BUFFER_SIZE];
@@ -193,6 +194,7 @@ int UART_getChar(FILE *stream)
 
 	return STREAM_getChar(buff, UART_GETCHAR_BUFFER_SIZE, &rxptr, &uart_io, stream);
 }
+#endif
 
 char *UART_readLine(char *s, uint8_t n, char **rxptr)
 {
