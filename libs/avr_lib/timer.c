@@ -4,17 +4,57 @@
 #include <avr/interrupt.h>
 #include <util/atomic.h>
 
-void TIMER0_init(Timer_Init_Typedef *init)
+void TIMER_init(
+    Timer_Init_Typedef *init,
+    bool clearFirst,
+    uint8_t *tccra,
+    uint8_t *tccrb,
+    uint8_t *timsk)
 {
+    if (clearFirst)
+    {
+        *tccra = 0;
+        *tccrb = 0;
+        *timsk = 0;
+    }
     // configure the compare outputs per init and use fast PWM mode with top of 0xff
-    TCCR0A = init->ocConfig | _BV(WGM01) | _BV(WGM00);
+    *tccra |= init->comConfig | (init->wgmConfig & 0x03);
     // setup the clock source and prescaler
-    TCCR0B = init->clockSelect;
+    *tccrb |= init->clockSelect | ((init->wgmConfig & 0xc) << 1);
     if (init->overflowInteruptEn)
     {
-        TIMSK0 = _BV(TOIE0);
+        *timsk |= _BV(TOIE0);
+    }
+    if (init->matchAInteruptEn)
+    {
+        *timsk |= _BV(OCIE0A);
+    }
+    if (init->matchBInteruptEn)
+    {
+        *timsk |= _BV(OCIE0B);
     }
 }
+
+#ifdef TCCR0A
+void TIMER0_init(Timer_Init_Typedef *init, bool clearFirst)
+{
+    TIMER_init(init, clearFirst, &TCCR0A, &TCCR0B, &TIMSK0);
+}
+#endif // TCCR0A
+
+#ifdef TCCR1A
+void TIMER1_init(Timer_Init_Typedef *init, bool clearFirst)
+{
+    TIMER_init(init, clearFirst, &TCCR1A, &TCCR1B, &TIMSK1);
+}
+#endif // TCCR1A
+
+#ifdef TCCR2A
+void TIMER2_init(Timer_Init_Typedef *init, bool clearFirst)
+{
+    TIMER_init(init, clearFirst, &TCCR2A, &TCCR2B, &TIMSK2);
+}
+#endif // TCCR2A
 
 // continuously updated to track current number of ticks since rollover
 // needs to be volatile since it is only updated in the ISR
