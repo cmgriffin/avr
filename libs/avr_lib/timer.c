@@ -5,11 +5,11 @@
 #include <util/atomic.h>
 
 void TIMER_init(
-    Timer_Init_Typedef *init,
+    const Timer_Init_Typedef *init,
     bool clearFirst,
-    uint8_t *tccra,
-    uint8_t *tccrb,
-    uint8_t *timsk)
+    volatile uint8_t *const tccra,
+    volatile uint8_t *const tccrb,
+    volatile uint8_t *const timsk)
 {
     if (clearFirst)
     {
@@ -18,39 +18,28 @@ void TIMER_init(
         *timsk = 0;
     }
     // configure the compare outputs per init and use fast PWM mode with top of 0xff
-    *tccra |= init->comConfig | (init->wgmConfig & 0x03);
+    *tccra |= init->ocConfig | (init->wgmConfig & 0x03);
     // setup the clock source and prescaler
-    *tccrb |= init->clockSelect | ((init->wgmConfig & 0xc) << 1);
-    if (init->overflowInteruptEn)
-    {
-        *timsk |= _BV(TOIE0);
-    }
-    if (init->matchAInteruptEn)
-    {
-        *timsk |= _BV(OCIE0A);
-    }
-    if (init->matchBInteruptEn)
-    {
-        *timsk |= _BV(OCIE0B);
-    }
+    *tccrb |= init->clockSelect | ((init->wgmConfig & 0xFC) << 1);
+    *timsk |= init->interuptEnable;
 }
 
 #ifdef TCCR0A
-void TIMER0_init(Timer_Init_Typedef *init, bool clearFirst)
+void TIMER0_init(const Timer_Init_Typedef *init, bool clearFirst)
 {
     TIMER_init(init, clearFirst, &TCCR0A, &TCCR0B, &TIMSK0);
 }
 #endif // TCCR0A
 
 #ifdef TCCR1A
-void TIMER1_init(Timer_Init_Typedef *init, bool clearFirst)
+void TIMER1_init(const Timer_Init_Typedef *init, bool clearFirst)
 {
     TIMER_init(init, clearFirst, &TCCR1A, &TCCR1B, &TIMSK1);
 }
 #endif // TCCR1A
 
 #ifdef TCCR2A
-void TIMER2_init(Timer_Init_Typedef *init, bool clearFirst)
+void TIMER2_init(const Timer_Init_Typedef *init, bool clearFirst)
 {
     TIMER_init(init, clearFirst, &TCCR2A, &TCCR2B, &TIMSK2);
 }

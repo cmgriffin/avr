@@ -12,6 +12,7 @@ SERIAL_BAUD = 9600
 ## If you move either the current folder or the Library folder, you'll 
 ##  need to change this path to match.
 LIBDIR = ../../libs/avr_lib
+PROJDIR = ../../libs/avr_lib
 
 ##########------------------------------------------------------##########
 ##########                 Programmer Defaults                  ##########
@@ -92,7 +93,7 @@ $(TARGET).elf: $(OBJECTS)
 	$(OBJDUMP) -S $< > $@
 
 ## These targets don't have files named after them
-.PHONY: all disassemble disasm eeprom size clean squeaky_clean flash fuses monitor
+.PHONY: all disassemble disasm eeprom size clean flash fuses monitor
 
 all: $(TARGET).hex 
 
@@ -117,21 +118,7 @@ size:  $(TARGET).elf
 
 clean:
 	rm -f $(OBJECTS) $(DEPS)
-	rm -f $(TARGET).elf
-	rm -f $(TARGET).hex 
-	rm -f $(TARGET).obj
-	rm -f $(TARGET).d 
-	rm -f $(TARGET).eep 
-	rm -f $(TARGET).lst
-	rm -f $(TARGET).lss 
-	rm -f $(TARGET).sym 
-	rm -f $(TARGET).map 
-	rm -f $(TARGET).eeprom
-
-
-
-squeaky_clean:
-	rm -f *.elf *.hex *.obj *.o *.d *.eep *.lst *.lss *.sym *.map *~ *.eeprom
+	rm -f *.elf *.hex *.obj *.o *.d *.eep *.lst *.lss *.sym *.map *.eeprom
 
 monitor:
 	python -m serial.tools.miniterm $(SERIAL_PORT) $(SERIAL_BAUD)

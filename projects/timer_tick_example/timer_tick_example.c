@@ -24,10 +24,11 @@ int main(void)
   printf("current ms = %d\n", TIMER_time_ms());
   TIMER_delay_ms(1000);
   printf("current ms = %d\n", TIMER_time_ms());
-  for (uint16_t i = 1; i < 0x7fff; i <<= 1)
-  {
-    TIMER_delay_ms(i);
-  }
+
+  uint16_t timer = TCNT0;
+  //_delay_us(100);
+  timer = TCNT0 - timer;
+  printf("10us delay took = %d timer counts\n", timer);
 
   for (;;)
   {
