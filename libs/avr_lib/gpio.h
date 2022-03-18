@@ -48,22 +48,22 @@ typedef struct
 #define GPIO_PB6 _PIN_STRUCT(GPIO_PORTB, _BV(PB6))
 #define GPIO_PB7 _PIN_STRUCT(GPIO_PORTB, _BV(PB7))
 
-#define GPIO_PC0 _PIN_STRUCT(GPIO_PORTC _BV(PC0))
-#define GPIO_PC1 _PIN_STRUCT(GPIO_PORTC _BV(PC1))
-#define GPIO_PC2 _PIN_STRUCT(GPIO_PORTC _BV(PC2))
-#define GPIO_PC3 _PIN_STRUCT(GPIO_PORTC _BV(PC3))
-#define GPIO_PC4 _PIN_STRUCT(GPIO_PORTC _BV(PC4))
-#define GPIO_PC5 _PIN_STRUCT(GPIO_PORTC _BV(PC5))
-#define GPIO_PC6 _PIN_STRUCT(GPIO_PORTC _BV(PC6))
+#define GPIO_PC0 _PIN_STRUCT(GPIO_PORTC, _BV(PC0))
+#define GPIO_PC1 _PIN_STRUCT(GPIO_PORTC, _BV(PC1))
+#define GPIO_PC2 _PIN_STRUCT(GPIO_PORTC, _BV(PC2))
+#define GPIO_PC3 _PIN_STRUCT(GPIO_PORTC, _BV(PC3))
+#define GPIO_PC4 _PIN_STRUCT(GPIO_PORTC, _BV(PC4))
+#define GPIO_PC5 _PIN_STRUCT(GPIO_PORTC, _BV(PC5))
+#define GPIO_PC6 _PIN_STRUCT(GPIO_PORTC, _BV(PC6))
 
-#define GPIO_PD0 _PIN_STRUCT(GPIO_PORTD _BV(PD0))
-#define GPIO_PD1 _PIN_STRUCT(GPIO_PORTD _BV(PD1))
-#define GPIO_PD2 _PIN_STRUCT(GPIO_PORTD _BV(PD2))
-#define GPIO_PD3 _PIN_STRUCT(GPIO_PORTD _BV(PD3))
-#define GPIO_PD4 _PIN_STRUCT(GPIO_PORTD _BV(PD4))
-#define GPIO_PD5 _PIN_STRUCT(GPIO_PORTD _BV(PD5))
-#define GPIO_PD6 _PIN_STRUCT(GPIO_PORTD _BV(PD6))
-#define GPIO_PD7 _PIN_STRUCT(GPIO_PORTD _BV(PD7))
+#define GPIO_PD0 _PIN_STRUCT(GPIO_PORTD, _BV(PD0))
+#define GPIO_PD1 _PIN_STRUCT(GPIO_PORTD, _BV(PD1))
+#define GPIO_PD2 _PIN_STRUCT(GPIO_PORTD, _BV(PD2))
+#define GPIO_PD3 _PIN_STRUCT(GPIO_PORTD, _BV(PD3))
+#define GPIO_PD4 _PIN_STRUCT(GPIO_PORTD, _BV(PD4))
+#define GPIO_PD5 _PIN_STRUCT(GPIO_PORTD, _BV(PD5))
+#define GPIO_PD6 _PIN_STRUCT(GPIO_PORTD, _BV(PD6))
+#define GPIO_PD7 _PIN_STRUCT(GPIO_PORTD, _BV(PD7))
 
 // Typical Arduino defines for Atmega328, 168, etc
 #define D0 GPIO_PD0
@@ -121,25 +121,25 @@ required.
 */
 
 // Sets pin(s) in struct to input
-__attribute__((always_inline)) static inline void GPIO_setInput(GPIO_TypeDef *gpio)
+__attribute__((always_inline)) static inline void GPIO_setInput(const GPIO_TypeDef *gpio)
 {
     gpio->port->ddr &= ~(gpio->mask);
 }
 
 // Sets pin(s) in struct to output
-__attribute__((always_inline)) static inline void GPIO_setOutput(GPIO_TypeDef *gpio)
+__attribute__((always_inline)) static inline void GPIO_setOutput(const GPIO_TypeDef *gpio)
 {
     gpio->port->ddr |= gpio->mask;
 }
 
 // Sets pin(s) direction to value provided. Will both set and clear bits. Value must line up pin_mask that is defined in struct.
-__attribute__((always_inline)) static inline void GPIO_setDir(GPIO_TypeDef *gpio, uint8_t dir)
+__attribute__((always_inline)) static inline void GPIO_setDir(const GPIO_TypeDef *gpio, uint8_t dir)
 {
     gpio->port->ddr = (gpio->port->ddr & ~gpio->mask) | dir;
 }
 
 // Sets all pins interpreting value as a logical value
-__attribute__((always_inline)) static inline void GPIO_setDirLogical(GPIO_TypeDef *gpio, uint8_t dir)
+__attribute__((always_inline)) static inline void GPIO_setDirLogical(const GPIO_TypeDef *gpio, uint8_t dir)
 {
     if (dir)
     {
@@ -152,31 +152,31 @@ __attribute__((always_inline)) static inline void GPIO_setDirLogical(GPIO_TypeDe
 }
 
 // Toggles the pin(s) value. Uses PINx=1 toggle function which should be faster than PORT^=1
-__attribute__((always_inline)) static inline void GPIO_toggleValue(GPIO_TypeDef *gpio)
+__attribute__((always_inline)) static inline void GPIO_toggleValue(const GPIO_TypeDef *gpio)
 {
     gpio->port->pin |= gpio->mask;
 }
 
 // Sets the pin value high
-__attribute__((always_inline)) static inline void GPIO_setValueHigh(GPIO_TypeDef *gpio)
+__attribute__((always_inline)) static inline void GPIO_setValueHigh(const GPIO_TypeDef *gpio)
 {
     gpio->port->port |= gpio->mask;
 }
 
 // Set the pin value to low
-__attribute__((always_inline)) static inline void GPIO_setValueLow(GPIO_TypeDef *gpio)
+__attribute__((always_inline)) static inline void GPIO_setValueLow(const GPIO_TypeDef *gpio)
 {
     gpio->port->port &= ~(gpio->mask);
 }
 
 // Sets pin(s) to value provided. Will both set and clear bits. Value must line up pin_mask that is defined in struct.
-__attribute__((always_inline)) static inline void GPIO_setValue(GPIO_TypeDef *gpio, uint8_t value)
+__attribute__((always_inline)) static inline void GPIO_setValue(const GPIO_TypeDef *gpio, uint8_t value)
 {
     gpio->port->port = (gpio->port->port & ~gpio->mask) | value;
 }
 
 // Sets pin(s) interpreting value as a logical value
-__attribute__((always_inline)) static inline void GPIO_setValueLogical(GPIO_TypeDef *gpio, uint8_t value)
+__attribute__((always_inline)) static inline void GPIO_setValueLogical(const GPIO_TypeDef *gpio, uint8_t value)
 {
     if (value)
     {
@@ -189,7 +189,7 @@ __attribute__((always_inline)) static inline void GPIO_setValueLogical(GPIO_Type
 }
 
 // Returns the pin(s) input state. Will be logically true if any pin is high.
-__attribute__((always_inline)) static inline uint8_t GPIO_getInput(GPIO_TypeDef *gpio)
+__attribute__((always_inline)) static inline uint8_t GPIO_getInput(const GPIO_TypeDef *gpio)
 {
     return gpio->port->port & gpio->mask;
 }
