@@ -57,3 +57,6 @@ workspace.code-workspace
 
 # sandbox folder with test programs should be excluded from repo
 projects/sandbox
+
+# disassembly files
+*.lst
