@@ -21,7 +21,7 @@
 
 // #define UART_GETCHAR_BUFFER_SIZE 10
 
-//#define UART_INIT_STDOUT
+#define UART_INIT_STDOUT
 // #define UART_INIT_STDIN
 
 // TIMER
@@ -30,12 +30,12 @@
 #define TIMER_TICK_PRESCALLER 64UL
 
 // ADC
-#define ADC_DEBUG
+//#define ADC_DEBUG
 //#define ADC_USE_SLEEP_MODE
 #define ADC_REF_SETTLE_TIME 1 // ms
 
 // I2C
-#define I2C_DEBUG
+//#define I2C_DEBUG
 
 // Arduino Hardware
 #define LED_PIN PB5 // typically the builtin LED is connected to PB5
