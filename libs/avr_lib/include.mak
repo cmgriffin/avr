@@ -134,22 +134,18 @@ avrdude_terminal:
 ## If you've got multiple programmers that you use, 
 ## you can define them here so that it's easy to switch.
 ## To invoke, use something like `make flash_arduinoISP`
-flash_usbtiny: PROGRAMMER_TYPE = usbtiny
-flash_usbtiny: PROGRAMMER_ARGS =  # USBTiny works with no further arguments
-flash_usbtiny: flash
+flash_arduino: PROGRAMMER_TYPE = arduino
+flash_arduino: PROGRAMMER_ARGS = -P $(SERIAL_PORT) -b 115200
+flash_arduino: flash
 
-flash_usbasp: PROGRAMMER_TYPE = usbasp
-flash_usbasp: PROGRAMMER_ARGS =  # USBasp works with no further arguments
-flash_usbasp: flash
+flash_nano: PROGRAMMER_TYPE = arduino
+flash_nano: PROGRAMMER_ARGS = -P $(SERIAL_PORT) -b 57600
+flash_nano: flash
 
-flash_arduinoISP: PROGRAMMER_TYPE = avrisp
-flash_arduinoISP: PROGRAMMER_ARGS = -b 19200 -P /dev/ttyACM0 
-## (for windows) flash_arduinoISP: PROGRAMMER_ARGS = -b 19200 -P com5
-flash_arduinoISP: flash
+flash_avrisp: PROGRAMMER_TYPE = stk500v2
+flash_avrisp: PROGRAMMER_ARGS = 
+flash_avrisp: flash
 
-flash_109: PROGRAMMER_TYPE = avr109
-flash_109: PROGRAMMER_ARGS = -b 9600 -P /dev/ttyUSB0
-flash_109: flash
 
 ##########------------------------------------------------------##########
 ##########       Fuse settings and suitable defaults            ##########
