@@ -34,7 +34,7 @@ AVRDUDE = avrdude
 ## The name of your project (without the .c)
 # TARGET = blinkLED
 ## Or name it automatically after the enclosing directory
-TARGET = $(lastword $(subst /, ,$(CURDIR)))
+TARGET ?= $(lastword $(subst /, ,$(CURDIR)))
 
 # Object files: will find all .c/.h files in current directory
 #  and in LIBDIR.  If you have any other (sub-)directories with code,
@@ -55,7 +55,7 @@ LDFLAGS = -Wl,-Map,$(TARGET).map
 ## Optional, but often ends up with smaller code
 LDFLAGS += -Wl,--gc-sections 
 ## Relax shrinks code even more, but makes disassembly messy
-LDFLAGS += -Wl,--relax
+# LDFLAGS += -Wl,--relax
 ## LDFLAGS += -Wl,-u,vfprintf -lprintf_flt -lm  ## for floating-point printf
 ## LDFLAGS += -Wl,-u,vfprintf -lprintf_min      ## for smaller printf
 TARGET_ARCH = -mmcu=$(MCU)
@@ -142,8 +142,12 @@ flash_nano: PROGRAMMER_TYPE = arduino
 flash_nano: PROGRAMMER_ARGS = -P $(SERIAL_PORT) -b 57600
 flash_nano: flash
 
+flash_micro: PROGRAMMER_TYPE = avr109
+flash_micro: PROGRAMMER_ARGS = -P $(SERIAL_PORT)
+flash_micro: flash
+
 flash_avrisp: PROGRAMMER_TYPE = stk500v2
-flash_avrisp: PROGRAMMER_ARGS = 
+flash_avrisp: PROGRAMMER_ARGS = -P usb
 flash_avrisp: flash
 
 
