@@ -13,6 +13,7 @@
 
 // UART
 //#define UART_DEBUG
+#define UART_N 0
 #define BAUD 9600
 // #define UART_RX_INTERUPT       // enable interupt driven UART recieving
 // #define UART_RX_BUFFER_SIZE 10 // recieve buffer size when UART is interupt driven
@@ -36,6 +37,8 @@
 
 // I2C
 #define I2C_DEBUG
+#define I2C_GPIO_SDA GPIO_PC4
+#define I2C_GPIO_SCL GPIO_PC5
 
 // Arduino Hardware
 #define LED_PIN PB5 // typically the builtin LED is connected to PB5
