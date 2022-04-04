@@ -1,9 +1,6 @@
 #ifndef __GLOBAL__
 #define __GLOBAL__
 
-#define STRING2(x) #x
-#define STRING(x) STRING2(x)
-
 // Global Defines (used by many avr-libc libaries)
 
 #define F_CPU 16000000UL
