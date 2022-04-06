@@ -1,3 +1,7 @@
+#if __has_include("uart_conf.h")
+#include "uart_conf.h"
+
+#include "global.h"
 #include "uart.h"
 
 #include <avr/interrupt.h>
@@ -9,22 +13,23 @@
 #include <util/setbaud.h>
 
 #include "buffer.h"
-#include "global.h"
+
 #include "stream.h"
 
-#ifndef UART_N
+#ifdef UART_N
 
 #if UART_N == 0
 #define UBRRnH UBRR0H
 #define UBRRnL UBRR0L
 #define UCSRnA UCSR0A
-#define U2Xn U2X0
-#define UDREn UDRE0
-#define RXCn RXC0
+#define U2Xn   U2X0
+#define UDREn  UDRE0
+#define RXCn   RXC0
+#define FEn    FE0
 
 #define UCSRnB UCSR0B
-#define TXENn TXEN0
-#define RXENn RXEN0
+#define TXENn  TXEN0
+#define RXENn  RXEN0
 #define TXCIEn TXCIE0
 #define RXCIEn RXCIE0
 
@@ -32,19 +37,20 @@
 #define UCSZn1 UCSZ01
 #define UCSZn0 UCSZ00
 
-#define UDRn UDR0
+#define UDRn   UDR0
 
 #elif UART_N == 1
 #define UBRRnH UBRR1H
 #define UBRRnL UBRR1L
 #define UCSRnA UCSR1A
-#define U2Xn U2X1
-#define UDREn UDRE1
-#define RXCn RXC1
+#define U2Xn   U2X1
+#define UDREn  UDRE1
+#define RXCn   RXC1
+#define FEn    FE1
 
 #define UCSRnB UCSR1B
-#define TXENn TXEN1
-#define RXENn RXEN1
+#define TXENn  TXEN1
+#define RXENn  RXEN1
 #define TXCIEn TXCIE1
 #define RXCIEn RXCIE1
 
@@ -52,7 +58,7 @@
 #define UCSZn1 UCSZ11
 #define UCSZn0 UCSZ10
 
-#define UDRn UDR1
+#define UDRn   UDR1
 
 #endif
 
@@ -88,32 +94,32 @@ static stream_t uart_io = STREAM_CREATE(UART_TransmitByte, UART_ReceiveByte);
  */
 void UART_init(void)
 {
-  // set up the baud rate
-  UBRR0H = UBRRH_VALUE; /* defined in setbaud.h */
-  UBRR0L = UBRRL_VALUE;
+    // set up the baud rate
+    UBRRnH = UBRRH_VALUE; /* defined in setbaud.h */
+    UBRRnL = UBRRL_VALUE;
 #if USE_2X
-  UCSR0A |= (1 << U2X0);
+    UCSRnA |= (1 << U2Xn);
 #else
-  UCSR0A &= ~(1 << U2X0);
+    UCSRnA &= ~(1 << U2Xn);
 #endif
 
-  /* Enable USART transmitter/receiver and receiver interupt*/
-  UCSR0B = (1 << TXEN0) | (1 << RXEN0);
+    /* Enable USART transmitter/receiver and receiver interupt*/
+    UCSRnB = (1 << TXENn) | (1 << RXENn);
 
 #ifdef UART_RX_INTERUPT
-  UCSR0B |= (1 << RXCIE0);
+    UCSRnB |= (1 << RXCIEn);
 #endif
 #ifdef UART_TX_INTERUPT
-  UCSR0B |= (1 << TXCIE0);
+    UCSRnB |= (1 << TXCIEn);
 #endif
 
-  UCSR0C = (1 << UCSZ01) | (1 << UCSZ00); /* 8 data bits, 1 stop bit */
+    UCSRnC = (1 << UCSZn1) | (1 << UCSZn0); /* 8 data bits, 1 stop bit */
 
 #ifdef UART_INIT_STDOUT
-  stdout = &uart_stream;
+    stdout = &uart_stream;
 #endif
 #ifdef UART_INIT_STDIN
-  stdin = &uart_stream;
+    stdin = &uart_stream;
 #endif
 }
 
@@ -127,42 +133,42 @@ bool UART_TransmitByte(uint8_t c, bool blocking)
 {
 #ifdef UART_TX_INTERUPT
 
-  if (!tx_busy)
-  {
-    // send the first byte to start the ISR
-    tx_busy = true;
-    loop_until_bit_is_set(UCSR0A, UDRE0);
-    UDR0 = c; /* send data */
-    return true;
-  }
-  else
-  {
-    // ISR will handle sending subsequent bytes
-    // in case the buffer is full we need to wait
-    while (BUFFER_full(&txbuff) && blocking)
+    if (!tx_busy)
     {
-      ;
+        // send the first byte to start the ISR
+        tx_busy = true;
+        loop_until_bit_is_set(UCSRnA, UDREn);
+        UDRn = c; /* send data */
+        return true;
     }
-    return BUFFER_enqueue(&txbuff, c);
-  }
+    else
+    {
+        // ISR will handle sending subsequent bytes
+        // in case the buffer is full we need to wait
+        while (BUFFER_full(&txbuff) && blocking)
+        {
+            ;
+        }
+        return BUFFER_enqueue(&txbuff, c);
+    }
 #else // not interupt driven
-  if (blocking)
-  {
-    /* Wait for empty transmit buffer */
-    loop_until_bit_is_set(UCSR0A, UDRE0);
-    UDR0 = c; /* send data */
-    return true;
-  }
-  else if (bit_is_clear(UCSR0A, UDRE0))
-  { // buffer full and not waiting
-    return false;
-  }
-  else
-  {
-    // buffer empty
-    UDR0 = c;
-    return true;
-  }
+    if (blocking)
+    {
+        /* Wait for empty transmit buffer */
+        loop_until_bit_is_set(UCSRnA, UDREn);
+        UDRn = c; /* send data */
+        return true;
+    }
+    else if (bit_is_clear(UCSRnA, UDREn))
+    { // buffer full and not waiting
+        return false;
+    }
+    else
+    {
+        // buffer empty
+        UDRn = c;
+        return true;
+    }
 #endif
 }
 
@@ -174,43 +180,43 @@ bool UART_TransmitByte(uint8_t c, bool blocking)
  */
 bool UART_ReceiveByte(uint8_t *c, bool blocking)
 {
-  // TODO: could pack these into two conditions...
+    // TODO: could pack these into two conditions...
 #ifdef UART_RX_INTERUPT
-  if (blocking)
-  {
-    while (BUFFER_empty(&rxbuff))
+    if (blocking)
     {
-      ;
+        while (BUFFER_empty(&rxbuff))
+        {
+            ;
+        }
+        *c = BUFFER_dequeue(&rxbuff);
+        return true;
     }
-    *c = BUFFER_dequeue(&rxbuff);
-    return true;
-  }
-  else if (BUFFER_empty(&rxbuff))
-  {
-    return false;
-  }
-  else
-  {
-    *c = BUFFER_dequeue(&rxbuff);
-    return true;
-  }
+    else if (BUFFER_empty(&rxbuff))
+    {
+        return false;
+    }
+    else
+    {
+        *c = BUFFER_dequeue(&rxbuff);
+        return true;
+    }
 
 #else
-  if (blocking)
-  {
-    loop_until_bit_is_set(UCSR0A, RXC0); /* Wait for incoming data */
-    *c = UDR0;                           /* return register value */
-    return true;
-  }
-  else if (bit_is_clear(UCSR0A, RXC0))
-  {
-    return false;
-  }
-  else
-  {
-    *c = UDR0;
-    return true;
-  }
+    if (blocking)
+    {
+        loop_until_bit_is_set(UCSRnA, RXCn); /* Wait for incoming data */
+        *c = UDRn;                           /* return register value */
+        return true;
+    }
+    else if (bit_is_clear(UCSRnA, RXCn))
+    {
+        return false;
+    }
+    else
+    {
+        *c = UDRn;
+        return true;
+    }
 
 #endif
 }
@@ -224,7 +230,7 @@ bool UART_ReceiveByte(uint8_t *c, bool blocking)
  */
 int UART_putChar(char c, FILE *stream)
 {
-  return STREAM_putChar(c, &uart_io, stream);
+    return STREAM_putChar(c, &uart_io, stream);
 }
 
 /**
@@ -237,17 +243,17 @@ int UART_putChar(char c, FILE *stream)
 #ifdef UART_GETCHAR_BUFFER_SIZE
 int UART_getChar(FILE *stream)
 {
-  static char buff[UART_GETCHAR_BUFFER_SIZE];
-  static char *rxptr; // ptr to the current position in the buffer when reading
+    static char buff[UART_GETCHAR_BUFFER_SIZE];
+    static char *rxptr; // ptr to the current position in the buffer when reading
 
-  return STREAM_getChar(buff, UART_GETCHAR_BUFFER_SIZE, &rxptr, &uart_io,
-                        stream);
+    return STREAM_getChar(buff, UART_GETCHAR_BUFFER_SIZE, &rxptr, &uart_io,
+                          stream);
 }
 #endif
 
 char *UART_readLine(char *s, uint8_t n, char **rxptr)
 {
-  return STREAM_readLine(s, n, rxptr, &uart_io);
+    return STREAM_readLine(s, n, rxptr, &uart_io);
 }
 
 void UART_printStr(const char *s) { STREAM_printStr(s, &uart_io); }
@@ -256,31 +262,31 @@ void UART_printStr_p(const char *s) { STREAM_printStr_p(s, &uart_io); }
 
 void UART_print_u16(uint16_t v, uint8_t fp, bool rj, bool neg_sign)
 {
-  STREAM_print_u16(v, fp, rj, neg_sign, &uart_io);
+    STREAM_print_u16(v, fp, rj, neg_sign, &uart_io);
 }
 
 void UART_print_i16(uint16_t v, uint8_t fp, bool rj)
 {
-  STREAM_print_i16(v, fp, rj, &uart_io);
+    STREAM_print_i16(v, fp, rj, &uart_io);
 }
 
 void UART_flush(void)
 {
-  uint8_t dummy __attribute__((unused));
-  while (UCSR0A & (1 << RXC0))
-    dummy = UDR0;
+    uint8_t dummy __attribute__((unused));
+    while (UCSRnA & (1 << RXCn))
+        dummy = UDRn;
 }
 
 #ifdef UART_RX_INTERUPT
 
 ISR(USART_RX_vect)
 {
-  volatile uint8_t response;
-  response = UDR0;
-  if (bit_is_clear(UCSR0A, FE0)) // if no framing error occurred
-  {
-    BUFFER_enqueue(&rxbuff, response);
-  }
+    volatile uint8_t response;
+    response = UDR0;
+    if (bit_is_clear(UCSRnA, FEn)) // if no framing error occurred
+    {
+        BUFFER_enqueue(&rxbuff, response);
+    }
 }
 #endif
 
@@ -288,17 +294,19 @@ ISR(USART_RX_vect)
 
 ISR(USART_TX_vect)
 {
-  if (BUFFER_empty(&txbuff))
-  {
-    // buffer is empty, nothing to send
-    tx_busy = false;
-  }
-  else
-  {
-    // send the next byte
-    UDR0 = BUFFER_dequeue(&txbuff);
-  }
+    if (BUFFER_empty(&txbuff))
+    {
+        // buffer is empty, nothing to send
+        tx_busy = false;
+    }
+    else
+    {
+        // send the next byte
+        UDRn = BUFFER_dequeue(&txbuff);
+    }
 }
+#endif
+
 #endif
 
 #endif

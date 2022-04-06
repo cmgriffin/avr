@@ -2,10 +2,11 @@
 #define SERIAL_COMMANDS_H
 /*
  * Implements serial callback commands
- * When the handleSerialCommands function is called it is passed a string pointer having the command to be parsed.
- * The list of command strings is looped through and the matching command is found.
- * The corresponding callback function is then called passing the remaining arguments.
- * The responsibility is given to the callback function to parse out and handle the arguments
+ * When the handleSerialCommands function is called it is passed a string pointer
+ * having the command to be parsed. The list of command strings is looped through
+ * and the matching command is found. The corresponding callback function is then
+ * called passing the remaining arguments. The responsibility is given to the
+ * callback function to parse out and handle the arguments
  */
 
 #ifdef __cplusplus

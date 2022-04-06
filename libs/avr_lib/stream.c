@@ -84,7 +84,7 @@ char *STREAM_readLine(char *s, uint8_t n, char **rxptr, stream_t *io)
             **rxptr = '\0';                // add null to end the string
             io->tx_func((uint8_t)c, true); // transmit c and block if necessary
             *rxptr = s;                    // reset the pointer
-            return s;                      // let the calling function know the buffer is ready
+            return s; // let the calling function know the buffer is ready
 
         case '\b': // backspace
             if (*rxptr > s)
@@ -131,10 +131,12 @@ void STREAM_printStr_p(const char *s, stream_t *io)
     }
 }
 
-void STREAM_print_u16(uint16_t v, uint8_t fp, bool rj, bool neg_sign, stream_t *io)
+void STREAM_print_u16(uint16_t v, uint8_t fp, bool rj, bool neg_sign,
+                      stream_t *io)
 {
     /*
-    * a total of 5 digits implemented due to 65,536 being max for unsigned integer
+    * a total of 5 digits implemented due to 65,536 being max for unsigned
+    integer
 
     */
     uint8_t first_digit = 1;
@@ -148,7 +150,8 @@ void STREAM_print_u16(uint16_t v, uint8_t fp, bool rj, bool neg_sign, stream_t *
         uint16_t n = (v / pgm_read_word(&powers_of_ten[pos])) % 10;
 
         if (pos == fp)
-        { // separate conditional since the decimal point gets printed right before the selected character
+        { // separate conditional since the decimal point gets printed right
+          // before the selected character
             if (first_digit)
             {
                 if (neg_sign)

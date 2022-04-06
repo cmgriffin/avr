@@ -1,3 +1,6 @@
+#if __has_include("adc_conf.h")
+#include "adc_conf.h"
+
 #include "adc.h"
 #include "avrlibdefs.h"
 #include "global.h"
@@ -7,12 +10,9 @@
 #include <debug.h>
 #include <util/delay.h>
 
-void ADC_init(
-    const uint8_t mux,
-    const uint8_t ref,
-    const uint8_t clk_div)
+void ADC_init(const uint8_t mux, const uint8_t ref, const uint8_t clk_div)
 {
-    ADMUX = mux | ref;
+    ADMUX  = mux | ref;
     ADCSRA = clk_div | ADC_ADCSRA_ADC_EN;
 #ifdef ADC_USE_SLEEP_MODE
     set_sleep_mode(SLEEP_MODE_ADC);
@@ -49,10 +49,13 @@ uint16_t ADC_measure(uint8_t mux)
 int8_t ADC_measure_temp()
 {
     uint8_t admux_prev = ADMUX;
-    update_bits(ADMUX, ADC_ADMUX_REF_INT | ADC_ADMUX_MUX_TEMP, ADC_ADMUX_MUX_MASK | ADC_ADMUX_REF_MASK);
+    update_bits(ADMUX, ADC_ADMUX_REF_INT | ADC_ADMUX_MUX_TEMP,
+                ADC_ADMUX_MUX_MASK | ADC_ADMUX_REF_MASK);
     _delay_ms(ADC_REF_SETTLE_TIME);
     int16_t raw = (int16_t)ADC_measure_current();
-    ADMUX = admux_prev;
+    ADMUX       = admux_prev;
     _delay_ms(ADC_REF_SETTLE_TIME);
     return (int8_t)((ADC_TEMP_GAIN * raw - ADC_TEMP_OFFSET) / 100);
 }
+
+#endif

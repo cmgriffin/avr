@@ -31,8 +31,8 @@ void UART_init(void);
  * @brief Low level function to transmit a byte using the UART
  *
  * @param c byte to transmit
- * @param blocking config if routine should block execution if unable to immediately
- * transmit the data
+ * @param blocking config if routine should block execution if unable to
+ * immediately transmit the data
  * @return true transmition of byte was successful
  * @return false transmition of byte was not successful
  * e.g. peripheral was not ready and function was not configured to be blocking
@@ -43,8 +43,8 @@ bool UART_TransmitByte(uint8_t c, bool blocking);
  * @brief Low level function to receive a byte using the UART
  *
  * @param c pointer to var where byte is to be recieved into
- * @param blocking config if routine should block execution if unable to immediately
- * receive the data
+ * @param blocking config if routine should block execution if unable to
+ * immediately receive the data
  * @return true receive of byte was successful
  * @return false receive of byte was not successful
  * e.g. no data was available and function was not configured to be blocking

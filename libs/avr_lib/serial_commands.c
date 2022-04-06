@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool checkForMatch(const char *token, const char *checkCmd, callback_args_t *cb_args)
+bool checkForMatch(const char *token, const char *checkCmd,
+                   callback_args_t *cb_args)
 {
     size_t checkCmdLength = strlen_P(checkCmd);
     if (!strncasecmp_P(token, checkCmd, checkCmdLength))
@@ -39,23 +40,23 @@ void handleSerialCommands(serial_command_t *sCmd, char *msg)
     uint8_t foundCmd = 0;
 
     _DEBUG("command string received: %s", msg);
-    token = strtok_P(msg, (PGM_P)pgm_read_word(&(sCmd->delimiter))); // get the command token
+    token = strtok_P(
+        msg, (PGM_P)pgm_read_word(&(sCmd->delimiter))); // get the command token
     _DEBUG("command key received: %s", token);
 
     for (uint8_t i = 0; i < pgm_read_byte(&(sCmd->n_cmds)); i++)
     {
-        const char *cmd = (PGM_P)pgm_read_word(&(sCmd->cmds[i].cmd_str));
+        const char *cmd         = (PGM_P)pgm_read_word(&(sCmd->cmds[i].cmd_str));
 
         callback_args_t cb_args = {
-            .cmd_args = NULL,
-            .query = false,
-            .var = NULL};
+            .cmd_args = NULL, .query = false, .var = NULL};
         if (checkForMatch(token, cmd, &cb_args))
         {
-            foundCmd = 1;
+            foundCmd         = 1;
             cb_args.cmd_args = strtok_P(NULL, "");
-            cb_args.var = (void *)pgm_read_ptr(&(sCmd->cmds[i].var));
-            int8_t result = ((callback_t)pgm_read_word(&(sCmd->cmds[i].callback)))(&cb_args);
+            cb_args.var      = (void *)pgm_read_ptr(&(sCmd->cmds[i].var));
+            int8_t result =
+                ((callback_t)pgm_read_word(&(sCmd->cmds[i].callback)))(&cb_args);
             if (result == 0)
                 ((result_callback_t)pgm_read_word(&(sCmd->ok_cmd)))();
             else

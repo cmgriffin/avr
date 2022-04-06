@@ -33,9 +33,10 @@ typedef struct
  * @brief abstracted constructor for buffer that doesn't require malloc
  *
  */
-#define BUFFER_CREATE(SIZE, VALUES_PTR)                                               \
-    {                                                                                 \
-        .valuesptr = VALUES_PTR, .head = 0, .tail = 0, .num_entries = 0, .size = SIZE \
+#define BUFFER_CREATE(SIZE, VALUES_PTR)                                  \
+    {                                                                    \
+        .valuesptr = VALUES_PTR, .head = 0, .tail = 0, .num_entries = 0, \
+        .size = SIZE                                                     \
     }
 
 /**

@@ -1,15 +1,17 @@
+#if __has_include("timer_conf.h")
+#include "timer_conf.h"
+
 #include "timer.h"
-#include "debug.h"
-#include "global.h"
+
 #include <avr/interrupt.h>
 #include <util/atomic.h>
 
-void TIMER_init(
-    const Timer_Init_Typedef *init,
-    bool clearFirst,
-    volatile uint8_t *const tccra,
-    volatile uint8_t *const tccrb,
-    volatile uint8_t *const timsk)
+#include "debug.h"
+#include "global.h"
+
+void TIMER_init(const Timer_Init_Typedef *init, bool clearFirst,
+                volatile uint8_t *const tccra, volatile uint8_t *const tccrb,
+                volatile uint8_t *const timsk)
 {
     if (clearFirst)
     {
@@ -17,7 +19,8 @@ void TIMER_init(
         *tccrb = 0;
         *timsk = 0;
     }
-    // configure the compare outputs per init and use fast PWM mode with top of 0xff
+    // configure the compare outputs per init and use fast PWM mode with top of
+    // 0xff
     *tccra |= init->ocConfig | (init->wgmConfig & 0x03);
     // setup the clock source and prescaler
     *tccrb |= init->clockSelect | ((init->wgmConfig & 0xFC) << 1);
@@ -54,10 +57,7 @@ static void (*tick_func)();
 uint16_t TIMER_getTicks()
 {
     uint16_t copy;
-    ATOMIC_BLOCK(ATOMIC_FORCEON)
-    {
-        copy = current_ticks;
-    }
+    ATOMIC_BLOCK(ATOMIC_FORCEON) { copy = current_ticks; }
     return copy;
 }
 
@@ -73,7 +73,9 @@ void TIMER_delayTicks(uint16_t ticks)
 
 void TIMER_delay_ms(uint16_t ms)
 {
-    uint16_t ticks = (uint16_t)(((uint32_t)ms * (F_CPU / 1000UL) + (TIMER_TICK_CLK_DIV >> 1)) / TIMER_TICK_CLK_DIV);
+    uint16_t ticks = (uint16_t)(((uint32_t)ms * (F_CPU / 1000UL) +
+                                 (TIMER_TICK_CLK_DIV >> 1)) /
+                                TIMER_TICK_CLK_DIV);
     _DEBUG("ms=%d, ticks=%d", ms, ticks);
     TIMER_delayTicks(ticks);
 }
@@ -82,18 +84,13 @@ uint16_t TIMER_time_ms()
 {
     uint32_t ticks = (uint32_t)TIMER_getTicks();
     _DEBUG("current ticks=%d", ticks);
-    return (uint16_t)((TIMER_TICK_CLK_DIV * ticks + (F_CPU / 2000)) / (F_CPU / 1000));
+    return (uint16_t)((TIMER_TICK_CLK_DIV * ticks + (F_CPU / 2000)) /
+                      (F_CPU / 1000));
 }
 
-void TIMER_attach_tick_func(void (*func)())
-{
-    tick_func = func;
-}
+void TIMER_attach_tick_func(void (*func)()) { tick_func = func; }
 
-void TIMER_detach_tick_func()
-{
-    tick_func = NULL;
-}
+void TIMER_detach_tick_func() { tick_func = NULL; }
 
 /**
  * @brief ISR definitions for timer tick implementations
@@ -148,4 +145,6 @@ ISR(TIMER2_OVF_vect)
         tick_func();
     }
 }
+#endif
+
 #endif

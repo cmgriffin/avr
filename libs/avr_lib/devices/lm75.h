@@ -5,10 +5,10 @@
 
 #define LM75_ADDR_BASE 0x48
 
-#define LM75_REG_TEMP 0x0
-#define LM75_REG_CONF 0x1
+#define LM75_REG_TEMP  0x0
+#define LM75_REG_CONF  0x1
 #define LM75_REG_THYST 0x2
-#define LM75_REG_TOS 0x3
+#define LM75_REG_TOS   0x3
 
 int8_t LM75_measure_temp_8b(uint8_t addr);
 

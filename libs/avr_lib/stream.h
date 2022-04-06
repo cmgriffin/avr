@@ -1,7 +1,8 @@
 /**
  * @file stream.h
  * @author your name (you@domain.com)
- * @brief A library of generic functions for sending and recieving character streams
+ * @brief A library of generic functions for sending and recieving character
+ * streams
  * @version 0.1
  * @date 2022-02-24
  *
@@ -100,7 +101,8 @@ void STREAM_printStr_p(const char *s, stream_t *io);
  * @param neg_sign add a negative sign
  * @param io struct of pointers to tx and rx funtions
  */
-void STREAM_print_u16(uint16_t v, uint8_t fp, bool rj, bool neg_sign, stream_t *io);
+void STREAM_print_u16(uint16_t v, uint8_t fp, bool rj, bool neg_sign,
+                      stream_t *io);
 
 /**
  * @brief Routine to print signed integers

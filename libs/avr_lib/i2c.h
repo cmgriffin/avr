@@ -5,42 +5,41 @@
 
 #ifdef TWCR
 
-#define I2C_TWCR_INTERUPT_EN 0x1
-#define I2C_TWCR_TWI_EN 0x4
+#define I2C_TWCR_INTERUPT_EN          0x1
+#define I2C_TWCR_TWI_EN               0x4
 #define I2C_TWCR_WRITE_COLLISION_FLAG 0x8
-#define I2C_TWCR_STOP_COND 0x10
-#define I2C_TWCR_START_COND 0x20
-#define I2C_TWCR_ACK_EN 0x40
-#define I2C_TWCR_INTERUPT_FLAG 0x80
+#define I2C_TWCR_STOP_COND            0x10
+#define I2C_TWCR_START_COND           0x20
+#define I2C_TWCR_ACK_EN               0x40
+#define I2C_TWCR_INTERUPT_FLAG        0x80
 
-#define I2C_TWSR_CLK_DIV1 0x0
-#define I2C_TWSR_CLK_DIV4 0x1
-#define I2C_TWSR_CLK_DIV16 0x2
-#define I2C_TWSR_CLK_DIV64 0x3
+#define I2C_TWSR_CLK_DIV1             0x0
+#define I2C_TWSR_CLK_DIV4             0x1
+#define I2C_TWSR_CLK_DIV16            0x2
+#define I2C_TWSR_CLK_DIV64            0x3
 
-#define I2C_STATUS_MASK 0xF8
-#define I2C_STATUS_MT_START 0x08
-#define I2C_STATUS_MT_REPEAT_START 0x10
-#define I2C_STATUS_MT_SLA_ACK 0x18
-#define I2C_STATUS_MT_SLA_NACK 0x20
-#define I2C_STATUS_MT_DATA_ACK 0x28
-#define I2C_STATUS_MT_DATA_NACK 0x30
-#define I2C_STATUS_MT_ARB_LOST 0x38
+#define I2C_STATUS_MASK               0xF8
+#define I2C_STATUS_MT_START           0x08
+#define I2C_STATUS_MT_REPEAT_START    0x10
+#define I2C_STATUS_MT_SLA_ACK         0x18
+#define I2C_STATUS_MT_SLA_NACK        0x20
+#define I2C_STATUS_MT_DATA_ACK        0x28
+#define I2C_STATUS_MT_DATA_NACK       0x30
+#define I2C_STATUS_MT_ARB_LOST        0x38
 
-#define I2C_STATUS_MR_START 0x08
-#define I2C_STATUS_MR_REPEAT_START 0x10
-#define I2C_STATUS_MR_ARB_LOST 0x38
-#define I2C_STATUS_MR_SLA_ACK 0x40
-#define I2C_STATUS_MR_SLA_NACK 0x48
-#define I2C_STATUS_MR_DATA_ACK 0x50
-#define I2C_STATUS_MR_DATA_NACK 0x58
+#define I2C_STATUS_MR_START           0x08
+#define I2C_STATUS_MR_REPEAT_START    0x10
+#define I2C_STATUS_MR_ARB_LOST        0x38
+#define I2C_STATUS_MR_SLA_ACK         0x40
+#define I2C_STATUS_MR_SLA_NACK        0x48
+#define I2C_STATUS_MR_DATA_ACK        0x50
+#define I2C_STATUS_MR_DATA_NACK       0x58
 
-#define I2C_STATUS_OK 0x01 // not used by peripheral statuses
+#define I2C_STATUS_OK                 0x01 // not used by peripheral statuses
 
-#define I2C_TWBR_MAX 0xFF
+#define I2C_TWBR_MAX                  0xFF
 
-typedef struct
-{
+typedef struct {
     bool interuptEn : 1;
     uint8_t clkSelect;
     uint8_t bitRateSelect;
@@ -92,9 +91,9 @@ uint8_t I2C_readBytes(const uint8_t targetAddr, uint8_t *readData,
  * @param nReadBytes number of bytes to be read
  * @return uint8_t I2C status code result
  */
-uint8_t I2C_writeReadBytes(const uint8_t targetAddr,
-                           const uint8_t *writeData, const uint8_t nWriteBytes,
-                           uint8_t *readData, const uint8_t nReadBytes);
+uint8_t I2C_writeReadBytes(const uint8_t targetAddr, const uint8_t *writeData,
+                           const uint8_t nWriteBytes, uint8_t *readData,
+                           const uint8_t nReadBytes);
 
 /**
  * @brief Scan through possible addresses and identify addresses that respond

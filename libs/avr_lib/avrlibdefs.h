@@ -23,7 +23,7 @@
  */
 #define update_bits(sfr, val, mask) (sfr) = (~(mask) & (sfr)) | ((val) & (mask))
 
-#define STRING2(x) #x
-#define STRING(x) STRING2(x)
+#define STRING2(x)                  #x
+#define STRING(x)                   STRING2(x)
 
 #endif // __AVRLIBDEFS__
