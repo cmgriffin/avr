@@ -282,7 +282,7 @@ GPIO_setValueLogical(const GPIO_TypeDef *gpio, uint8_t value)
 __attribute__((always_inline)) static inline uint8_t
 GPIO_getInput(const GPIO_TypeDef *gpio)
 {
-    return gpio->port->port & gpio->mask;
+    return gpio->port->pin & gpio->mask;
 }
 
 #endif /* GPIO_H */
