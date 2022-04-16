@@ -8,16 +8,4 @@
 // Debugging
 #define DEBUG // enable debugging
 
-// UART
-#define BAUD 9600
-#define UART_RX_BUFFER_SIZE 10
-//#define UART_RX_INTERUPT
-#define UART_INIT_STDOUT
-#define UART_INIT_STDERR
-
-// Arduino Hardware
-#define LED_PIN PB5 // typically the builtin LED is connected to PB5
-
-#define __ASSERT_USE_STDERR
-
 #endif

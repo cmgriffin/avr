@@ -12,5 +12,6 @@ int main(void)
     GPIO_toggleValue(&led);
     _delay_ms(1000);
   }
+
   return 0;
 }

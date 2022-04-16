@@ -1,19 +1,12 @@
 #include "global.h"
 #include <adc.h>
-#include <avr/interrupt.h>
-#include <avr/io.h>
+
 #include <avr/pgmspace.h>
-#include <gpio.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <timer.h>
 #include <uart.h>
 #include <util/delay.h>
 
 int main(void)
 {
-  GPIO_TypeDef led = D13;
-  GPIO_setOutput(&led);
   UART_init();
   ADC_init(ADC_ADMUX_MUX_INPUT0, ADC_ADMUX_REF_VCC, ADC_ADCSRA_CLK_DIV128);
   // ADMUX = ADC_ADMUX_MUX_TEMP | ADC_ADMUX_REF_INT;
