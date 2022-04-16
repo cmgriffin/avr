@@ -108,15 +108,15 @@ void __wait()
     uint8_t busy;
     do
     {
-        _delay_us(2);
+        _delay_us(1);
         GPIO_setValueLow(&((GPIO_TypeDef)EN));
-        _delay_us(2);
+        _delay_us(1);
         GPIO_setValueHigh(&((GPIO_TypeDef)EN));
-        _delay_us(2);
+        _delay_us(1);
         busy = GPIO_getInput(&((GPIO_TypeDef)D7));
 #ifdef _4BIT_MODE
         GPIO_setValueLow(&((GPIO_TypeDef)EN));
-        _delay_us(2);
+        _delay_us(1);
         GPIO_setValueHigh(&((GPIO_TypeDef)EN));
 #endif
     } while (busy);
@@ -203,13 +203,17 @@ void HD44780_clear()
     __writeInstrReg(0x01); // clear the display
 }
 
-void HD44780_printChar(uint8_t c, bool blocking)
+bool HD44780_printChar(uint8_t c, bool blocking)
 {
     _DEBUG("HD44780_printChar(%c)", c);
     if (c == '\n')
     {
         __writeInstrReg(0xC0); // go to next line
-        return;
+        return true;
+    }
+    if (c == '\r')
+    {
+        return true;
     }
     __wait();
     __setDataValue(c);
@@ -223,6 +227,7 @@ void HD44780_printChar(uint8_t c, bool blocking)
     {
         __writeInstrReg(0xC0); // go to next line
     }
+    return true;
 }
 
 void HD44780_setCursor(uint8_t col, uint8_t row)

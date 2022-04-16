@@ -23,7 +23,7 @@ void HD44780_clear();
  * @param c byte char to print
  * @param blocking no affect currently, this will always block
  */
-void HD44780_printChar(uint8_t c, bool blocking);
+bool HD44780_printChar(uint8_t c, bool blocking);
 
 /**
  * @brief Set the cursor to the provided position
