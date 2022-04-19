@@ -216,53 +216,53 @@ typedef struct
 #endif
 
 // Typical Arduino defines for Atmega328, 168, etc
-#define D0  GPIO_PD0
-#define D1  GPIO_PD1
-#define D2  GPIO_PD2
-#define D3  GPIO_PD3
-#define D4  GPIO_PD4
-#define D5  GPIO_PD5
-#define D6  GPIO_PD6
-#define D7  GPIO_PD7
-#define D8  GPIO_PB0
-#define D9  GPIO_PB1
-#define D10 GPIO_PB2
-#define D11 GPIO_PB3
-#define D12 GPIO_PB4
-#define D13 GPIO_PB5
-#define A0  GPIO_PC0
-#define A1  GPIO_PC1
-#define A2  GPIO_PC2
-#define A3  GPIO_PC3
-#define A4  GPIO_PC4
-#define A5  GPIO_PC5
+#define GPIO_D0  GPIO_PD0
+#define GPIO_D1  GPIO_PD1
+#define GPIO_D2  GPIO_PD2
+#define GPIO_D3  GPIO_PD3
+#define GPIO_D4  GPIO_PD4
+#define GPIO_D5  GPIO_PD5
+#define GPIO_D6  GPIO_PD6
+#define GPIO_D7  GPIO_PD7
+#define GPIO_D8  GPIO_PB0
+#define GPIO_D9  GPIO_PB1
+#define GPIO_D10 GPIO_PB2
+#define GPIO_D11 GPIO_PB3
+#define GPIO_D12 GPIO_PB4
+#define GPIO_D13 GPIO_PB5
+#define GPIO_A0  GPIO_PC0
+#define GPIO_A1  GPIO_PC1
+#define GPIO_A2  GPIO_PC2
+#define GPIO_A3  GPIO_PC3
+#define GPIO_A4  GPIO_PC4
+#define GPIO_A5  GPIO_PC5
 
 // More granular defines for setting up structs operating on multiple pins
-#define PORT_D0_7  GPIO_PORTD
-#define D0_MASK    _BV(PD0)
-#define D1_MASK    _BV(PD1)
-#define D2_MASK    _BV(PD2)
-#define D3_MASK    _BV(PD3)
-#define D4_MASK    _BV(PD4)
-#define D5_MASK    _BV(PD5)
-#define D6_MASK    _BV(PD6)
-#define D7_MASK    _BV(PD7)
+#define GPIO_PORT_D0_7  GPIO_PORTD
+#define GPIO_D0_MASK    _BV(PD0)
+#define GPIO_D1_MASK    _BV(PD1)
+#define GPIO_D2_MASK    _BV(PD2)
+#define GPIO_D3_MASK    _BV(PD3)
+#define GPIO_D4_MASK    _BV(PD4)
+#define GPIO_D5_MASK    _BV(PD5)
+#define GPIO_D6_MASK    _BV(PD6)
+#define GPIO_D7_MASK    _BV(PD7)
 
-#define PORT_D8_13 GPIO_PORTB
-#define D8_MASK    _BV(PB0)
-#define D9_MASK    _BV(PB1)
-#define D10_MASK   _BV(PB2)
-#define D11_MASK   _BV(PB3)
-#define D12_MASK   _BV(PB4)
-#define D13_MASK   _BV(PB5)
+#define GPIO_PORT_D8_13 GPIO_PORTB
+#define GPIO_D8_MASK    _BV(PB0)
+#define GPIO_D9_MASK    _BV(PB1)
+#define GPIO_D10_MASK   _BV(PB2)
+#define GPIO_D11_MASK   _BV(PB3)
+#define GPIO_D12_MASK   _BV(PB4)
+#define GPIO_D13_MASK   _BV(PB5)
 
-#define PORT_A0_5  GPIO_PORTC
-#define A0_MASK    _BV(PC0)
-#define A1_MASK    _BV(PC1)
-#define A2_MASK    _BV(PC2)
-#define A3_MASK    _BV(PC3)
-#define A4_MASK    _BV(PC4)
-#define A5_MASK    _BV(PC5)
+#define GPIO_PORT_A0_5  GPIO_PORTC
+#define GPIO_A0_MASK    _BV(PC0)
+#define GPIO_A1_MASK    _BV(PC1)
+#define GPIO_A2_MASK    _BV(PC2)
+#define GPIO_A3_MASK    _BV(PC3)
+#define GPIO_A4_MASK    _BV(PC4)
+#define GPIO_A5_MASK    _BV(PC5)
 
 /*
 GPIO struct based pin functions. Similar implementation to Pololu's FastIO lib
@@ -346,7 +346,7 @@ GPIO_setValueLogical(const GPIO_TypeDef *gpio, uint8_t value)
     }
     else
     {
-        gpio->port->port &= gpio->mask;
+        gpio->port->port &= ~(gpio->mask);
     }
 }
 
