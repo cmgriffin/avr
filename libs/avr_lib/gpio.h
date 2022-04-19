@@ -143,6 +143,78 @@ typedef struct
 
 #endif
 
+#ifdef PINE
+#define GPIO_PORTE (GPIO_PORT_t *)&PINE
+#ifdef PE0
+#define GPIO_PE0 _PIN_STRUCT(GPIO_PORTE, _BV(PE0))
+#endif
+
+#ifdef PE1
+#define GPIO_PE1 _PIN_STRUCT(GPIO_PORTE, _BV(PE1))
+#endif
+
+#ifdef PE2
+#define GPIO_PE2 _PIN_STRUCT(GPIO_PORTE, _BV(PE2))
+#endif
+
+#ifdef PE3
+#define GPIO_PE3 _PIN_STRUCT(GPIO_PORTE, _BV(PE3))
+#endif
+
+#ifdef PE4
+#define GPIO_PE4 _PIN_STRUCT(GPIO_PORTE, _BV(PE4))
+#endif
+
+#ifdef PE5
+#define GPIO_PE5 _PIN_STRUCT(GPIO_PORTE, _BV(PE5))
+#endif
+
+#ifdef PE6
+#define GPIO_PE6 _PIN_STRUCT(GPIO_PORTE, _BV(PE6))
+#endif
+
+#ifdef PE7
+#define GPIO_PE7 _PIN_STRUCT(GPIO_PORTE, _BV(PE7))
+#endif
+
+#endif
+
+#ifdef PINF
+#define GPIO_PORTF (GPIO_PORT_t *)&PINF
+#ifdef PF0
+#define GPIO_PF0 _PIN_STRUCT(GPIO_PORTF, _BV(PF0))
+#endif
+
+#ifdef PF1
+#define GPIO_PF1 _PIN_STRUCT(GPIO_PORTF, _BV(PF1))
+#endif
+
+#ifdef PF2
+#define GPIO_PF2 _PIN_STRUCT(GPIO_PORTF, _BV(PF2))
+#endif
+
+#ifdef PF3
+#define GPIO_PF3 _PIN_STRUCT(GPIO_PORTF, _BV(PF3))
+#endif
+
+#ifdef PF4
+#define GPIO_PF4 _PIN_STRUCT(GPIO_PORTF, _BV(PF4))
+#endif
+
+#ifdef PF5
+#define GPIO_PF5 _PIN_STRUCT(GPIO_PORTF, _BV(PF5))
+#endif
+
+#ifdef PF6
+#define GPIO_PF6 _PIN_STRUCT(GPIO_PORTF, _BV(PF6))
+#endif
+
+#ifdef PF7
+#define GPIO_PF7 _PIN_STRUCT(GPIO_PORTF, _BV(PF7))
+#endif
+
+#endif
+
 // Typical Arduino defines for Atmega328, 168, etc
 #define D0  GPIO_PD0
 #define D1  GPIO_PD1
