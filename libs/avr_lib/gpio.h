@@ -215,6 +215,8 @@ typedef struct
 
 #endif
 
+#if defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || \
+    defined(__AVR_ATmega168__)
 // Typical Arduino defines for Atmega328, 168, etc
 #define GPIO_D0  GPIO_PD0
 #define GPIO_D1  GPIO_PD1
@@ -263,6 +265,33 @@ typedef struct
 #define GPIO_A3_MASK    _BV(PC3)
 #define GPIO_A4_MASK    _BV(PC4)
 #define GPIO_A5_MASK    _BV(PC5)
+
+#endif
+
+#if defined(__AVR_ATmega32U4__)
+// Arduino Pro Micro Defines
+#define GPIO_D0  GPIO_PD2
+#define GPIO_D1  GPIO_PD3
+#define GPIO_D2  GPIO_PD1
+#define GPIO_D3  GPIO_PD0
+#define GPIO_D4  GPIO_PD4
+#define GPIO_D5  GPIO_PC6
+#define GPIO_D6  GPIO_PD7
+#define GPIO_D7  GPIO_PE6
+#define GPIO_D8  GPIO_PB4
+#define GPIO_D9  GPIO_PB5
+#define GPIO_D10 GPIO_PB6
+#define GPIO_D14 GPIO_PB3
+#define GPIO_D15 GPIO_PB1
+#define GPIO_D16 GPIO_PB2
+#define GPIO_D17 GPIO_PB0
+#define GPIO_D30 GPIO_PD5
+#define GPIO_A0  GPIO_PF7
+#define GPIO_A1  GPIO_PF6
+#define GPIO_A2  GPIO_PF5
+#define GPIO_A3  GPIO_PF4
+
+#endif
 
 /*
 GPIO struct based pin functions. Similar implementation to Pololu's FastIO lib
