@@ -17,6 +17,9 @@
 
 // Private Functions
 
+// Low Level functions
+
+// Pulse EN high then low for a write only
 void __pulseEn()
 {
     GPIO_setValueHigh(&((GPIO_TypeDef)EN));
@@ -25,17 +28,23 @@ void __pulseEn()
     _delay_us(1);
 }
 
+// select the instruction register for writing/reading
 static inline void __selInstrReg() { GPIO_setValueLow(&((GPIO_TypeDef)RS)); }
 
+// select the data register for writing/reading
 static inline void __selDataReg() { GPIO_setValueHigh(&((GPIO_TypeDef)RS)); }
 
+// configure for a register read
 static inline void __setRead() { GPIO_setValueHigh(&((GPIO_TypeDef)RW)); }
 
+// configure for a register write
 static inline void __setWrite() { GPIO_setValueLow(&((GPIO_TypeDef)RW)); }
 
+// set the data pins to output
 void __setDataOutput()
 {
     _DEBUG("__setDataOutput()", 0);
+    __setWrite(); // set the device to write mode
     GPIO_setOutput(&((GPIO_TypeDef)D7));
     GPIO_setOutput(&((GPIO_TypeDef)D6));
     GPIO_setOutput(&((GPIO_TypeDef)D5));
@@ -49,6 +58,7 @@ void __setDataOutput()
 #endif
 }
 
+// set the data pins to input
 void __setDataInput()
 {
     _DEBUG("__setDataInput()", 0);
@@ -63,8 +73,10 @@ void __setDataInput()
     GPIO_setInput(&((GPIO_TypeDef)D1));
     GPIO_setInput(&((GPIO_TypeDef)D0));
 #endif
+    __setRead();
 }
 
+// read the data currently on the data pins
 uint8_t __readDataValue()
 {
     uint8_t val = 0;
@@ -83,6 +95,7 @@ uint8_t __readDataValue()
     return val;
 }
 
+// set the data pins to val
 void __setDataValue(uint8_t val)
 {
     _DEBUG("__setDataValue(%X)", val);
@@ -100,10 +113,10 @@ void __setDataValue(uint8_t val)
     _DEBUG("__setDataValue(%X), check=%X", val, __readDataValue());
 }
 
+// wait until the devices has finished processing last command
 void __wait()
 {
     __setDataInput();
-    __setRead();
     __selInstrReg();
     uint8_t busy;
     do
@@ -121,17 +134,17 @@ void __wait()
 #endif
     } while (busy);
 
-    __setWrite();
     GPIO_setValueLow(&((GPIO_TypeDef)EN));
     __setDataOutput();
 }
 
+// write to the instuction register
 void __writeInstrReg(uint8_t instr)
 {
     _DEBUG("__writeInstrReg(%x)", instr);
-    __wait();
+    __wait(); // wait for previous command to complete, also sets data to
+              // output/write
     __setDataValue(instr);
-    __selInstrReg();
     __pulseEn();
 #ifdef _4BIT_MODE
     __setDataValue(instr << 4);
@@ -140,19 +153,37 @@ void __writeInstrReg(uint8_t instr)
 #endif
 }
 
+// write to the instruction register in 8bit mode regardless of configuration
+// this is used for first init steps to enable 4bit mode
 void __writeInstrReg_8bit(uint8_t instr)
 {
     _DEBUG("__writeInstrReg(%x)", instr);
     // __wait();
+    __setDataOutput();
     __setDataValue(instr);
     __selInstrReg();
     __pulseEn();
 }
 
+// write a value to the data register
+void __writeDataReg(uint8_t data)
+{
+    _DEBUG("__writeDataReg(%x)", data);
+    __wait();
+    __setDataValue(data);
+    __selInstrReg();
+    __pulseEn();
+#ifdef _4BIT_MODE
+    __setDataValue(data << 4);
+    __selInstrReg();
+    __pulseEn();
+#endif
+}
+
+// read value from an Read busy flag & address register
 uint8_t __readInstrReg()
 {
     __setDataInput();
-    __setRead();
     __selInstrReg();
     GPIO_setValueLow(&((GPIO_TypeDef)EN));
     _delay_us(1);
@@ -168,6 +199,28 @@ uint8_t __readInstrReg()
 #endif
     GPIO_setValueLow(&((GPIO_TypeDef)EN));
     _DEBUG("__readInstrReg() = %x", data);
+    return data;
+}
+
+// read a value from the data register
+uint8_t __readDataReg()
+{
+    __setDataInput();
+    __selDataReg();
+    GPIO_setValueLow(&((GPIO_TypeDef)EN));
+    _delay_us(1);
+    GPIO_setValueHigh(&((GPIO_TypeDef)EN));
+    _delay_us(1);
+    uint8_t data = __readDataValue();
+#ifdef _4BIT_MODE
+    GPIO_setValueLow(&((GPIO_TypeDef)EN));
+    _delay_us(1);
+    GPIO_setValueHigh(&((GPIO_TypeDef)EN));
+    _delay_us(1);
+    data += __readDataValue() >> 4;
+#endif
+    GPIO_setValueLow(&((GPIO_TypeDef)EN));
+    _DEBUG("__readDataReg() = %x", data);
     return data;
 }
 
@@ -203,6 +256,11 @@ void HD44780_clear()
     __writeInstrReg(0x01); // clear the display
 }
 
+void HD44780_setCursor(uint8_t col, uint8_t row)
+{
+    __writeInstrReg(0x80 + (row ? 0x40 : 0) + col);
+}
+
 bool HD44780_printChar(uint8_t c, bool blocking)
 {
     _DEBUG("HD44780_printChar(%c)", c);
@@ -215,14 +273,8 @@ bool HD44780_printChar(uint8_t c, bool blocking)
     {
         return true;
     }
-    __wait();
-    __setDataValue(c);
-    __selDataReg();
-    __pulseEn();
-#ifdef _4BIT_MODE
-    __setDataValue(c << 4);
-    __pulseEn();
-#endif
+    __writeDataReg(c);
+
     if ((__readInstrReg() & 0x7f) == 16)
     {
         __writeInstrReg(0xC0); // go to next line
@@ -230,9 +282,37 @@ bool HD44780_printChar(uint8_t c, bool blocking)
     return true;
 }
 
-void HD44780_setCursor(uint8_t col, uint8_t row)
+bool HD44780_printCharScrolling(uint8_t c, bool blocking)
 {
-    __writeInstrReg(0x80 + (row ? 0x40 : 0) + col);
+    _DEBUG("HD44780_printChar(%c)", c);
+    if (c == '\n')
+    {
+        HD44780_setCursor(0, N_ROWS - 1); // set the cursor to bottom row
+        // copy bottom row to top row
+        uint8_t i, b[N_COLS];
+        for (i = 0, i < N_COLS : i++)
+        {
+            b[i] = __readDataReg();
+        }
+        HD44780_setCursor(0, 0); // set the cursor to the top row
+        for (i = 0, i < N_COLS : i++)
+        {
+            __writeDataReg(b[i]);
+        }
+        HD44780_setCursor(0, N_ROWS - 1); // set the cursor to bottom row
+        return true;
+    }
+    if (c == '\r')
+    {
+        return true;
+    }
+    __writeDataReg(c);
+
+    if ((__readInstrReg() & 0x7f) == N_COLS)
+    {
+        HD44780_printCharScrolling('\n', true);
+    }
+    return true;
 }
 
 #endif
