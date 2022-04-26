@@ -10,7 +10,8 @@
 int LCD_putChar(char c, FILE *stream)
 {
     return STREAM_putChar(
-        c, &((stream_t){.tx_func = HD44780_printChar, .rx_func = NULL}),
+        c,
+        &((stream_t){.tx_func = HD44780_printCharScrolling, .rx_func = NULL}),
         stream);
 }
 
@@ -21,17 +22,23 @@ int main(void)
 
     UART_init();
     HD44780_init();
-
-    fprintf_P(&lcd, PSTR("Hello, World!!!\nHD44780 LCD"));
-    _delay_ms(2000);
+    HD44780_setCursor(0, 1);
+    fprintf_P(&lcd, PSTR("Hello, World!!!\nHD44780 LCD\n"));
+    _delay_ms(1000);
+    fprintf_P(&lcd, PSTR("these are lines\n"));
+    _delay_ms(1000);
+    fprintf_P(&lcd, PSTR("written to the\n"));
+    _delay_ms(1000);
+    fprintf_P(&lcd, PSTR("LCD\n"));
+    _delay_ms(1000);
     HD44780_clear();
     uint32_t counter = 0;
 
     for (;;)
     {
-        fprintf_P(&lcd, PSTR("Counter =\n%16lx"), counter);
-        _delay_ms(10);
-        HD44780_setCursor(0, 0);
+        fprintf_P(&lcd, PSTR("Counter = %lx\n"), counter);
+        _delay_ms(500);
+        // HD44780_setCursor(0, 0);
         counter++;
     }
     return 0;

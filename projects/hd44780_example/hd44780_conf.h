@@ -1,9 +1,9 @@
 #ifndef __HD44780_CONF__
 #define __HD44780_CONF__
 
-#define RS GPIO_A0
-#define RW GPIO_A1
-#define EN GPIO_A2
+#define RS GPIO_A1
+#define RW GPIO_A2
+#define EN GPIO_A3
 // #define D0     GPIO_D12
 // #define D1     GPIO_D11
 // #define D2     GPIO_D10

@@ -131,6 +131,7 @@ void __wait()
         GPIO_setValueLow(&((GPIO_TypeDef)EN));
         _delay_us(1);
         GPIO_setValueHigh(&((GPIO_TypeDef)EN));
+        _delay_us(1);
 #endif
     } while (busy);
 
@@ -171,11 +172,11 @@ void __writeDataReg(uint8_t data)
     _DEBUG("__writeDataReg(%x)", data);
     __wait();
     __setDataValue(data);
-    __selInstrReg();
+    __selDataReg();
     __pulseEn();
 #ifdef _4BIT_MODE
     __setDataValue(data << 4);
-    __selInstrReg();
+    __selDataReg();
     __pulseEn();
 #endif
 }
@@ -205,6 +206,7 @@ uint8_t __readInstrReg()
 // read a value from the data register
 uint8_t __readDataReg()
 {
+    __wait();
     __setDataInput();
     __selDataReg();
     GPIO_setValueLow(&((GPIO_TypeDef)EN));
@@ -285,30 +287,43 @@ bool HD44780_printChar(uint8_t c, bool blocking)
 bool HD44780_printCharScrolling(uint8_t c, bool blocking)
 {
     _DEBUG("HD44780_printChar(%c)", c);
+    static uint8_t col, newLine[N_COLS];
     if (c == '\n')
     {
+        uint8_t i, b[N_COLS];
+        for (i = col; i < N_COLS; i++)
+        {
+            newLine[i] = ' ';
+        }
+        col = 0;
         HD44780_setCursor(0, N_ROWS - 1); // set the cursor to bottom row
         // copy bottom row to top row
-        uint8_t i, b[N_COLS];
-        for (i = 0, i < N_COLS : i++)
+
+        for (i = 0; i < N_COLS; i++)
         {
             b[i] = __readDataReg();
         }
         HD44780_setCursor(0, 0); // set the cursor to the top row
-        for (i = 0, i < N_COLS : i++)
+        for (i = 0; i < N_COLS; i++)
         {
             __writeDataReg(b[i]);
         }
         HD44780_setCursor(0, N_ROWS - 1); // set the cursor to bottom row
+        for (i = 0; i < N_COLS; i++)
+        {
+            __writeDataReg(newLine[i]);
+        }
         return true;
     }
     if (c == '\r')
     {
+        // unused but could possible be used to reset the cursor to the start of
+        // the line
         return true;
     }
-    __writeDataReg(c);
+    newLine[col++] = c;
 
-    if ((__readInstrReg() & 0x7f) == N_COLS)
+    if (col == N_COLS)
     {
         HD44780_printCharScrolling('\n', true);
     }

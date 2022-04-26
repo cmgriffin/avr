@@ -26,6 +26,18 @@ void HD44780_clear();
 bool HD44780_printChar(uint8_t c, bool blocking);
 
 /**
+ * @brief A scrolling version of the printChar function
+ * The current line is stored in a buffer until a newline is detected. This new
+ * line is then inserted into the bottom row an all remaining lines are shifted
+ * up. Adds some overhead due to reading back and copying lines from one row to
+ * another.
+ *
+ * @param c byte char to print
+ * @param blocking no affect currently, this will always block
+ */
+bool HD44780_printCharScrolling(uint8_t c, bool blocking);
+
+/**
  * @brief Set the cursor to the provided position
  *
  * @param col column to set starting at 0
