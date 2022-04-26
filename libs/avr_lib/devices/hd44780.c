@@ -244,9 +244,16 @@ void HD44780_init()
     __writeInstrReg(0x38); // set 8-bit mode, 2-lines, 5x8 font
 #elif defined(_4BIT_MODE)
     // special write in 8-bit mode to change to 4-bit
+    // since we can't do the wait we make sure sure the display is actually
+    // in 8-bit mode before going to 4 bit mode
     __writeInstrReg_8bit(0x30); // make sure in 8 bit mode first
-    __writeInstrReg_8bit(0x20);
-    __writeInstrReg(0x28); // set 4-bit mode, 2-lines, 5x8 font
+    _delay_ms(1);
+    __writeInstrReg_8bit(0x30); // make sure in 8 bit mode first
+    _delay_ms(1);
+    __writeInstrReg_8bit(0x30); // make sure in 8 bit mode first
+    _delay_ms(1);
+    __writeInstrReg_8bit(0x20); // just set to 4-bit mode first
+    __writeInstrReg(0x28);      // set 4-bit mode, 2-lines, 5x8 font
 #endif
     __writeInstrReg(0x0C); // display on, cursor off, blink off
     __writeInstrReg(0x06); // increment and shift cursor, don't shift display
