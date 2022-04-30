@@ -1,136 +1,37 @@
-// -----------------------------------------------------------------------------
-// M2 USB communication subsystem
-// version: 2.3
-// date: March 21, 2013
-// authors: J. Fiene & J. Romano
-// -----------------------------------------------------------------------------
+/* USB Serial Example for Teensy USB Development Board
+ * http://www.pjrc.com/teensy/usb_serial.html
+ * Copyright (c) 2008,2010,2011 PJRC.COM, LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+// Version 1.0: Initial Release
+// Version 1.1: support Teensy++
+// Version 1.2: fixed usb_serial_available
+// Version 1.3: added transmit bandwidth test
+// Version 1.4: added usb_serial_write
+// Version 1.5: add support for Teensy 2.0
+// Version 1.6: fix zero length packet bug
+// Version 1.7: fix usb_serial_set_control
 
 #define USB_SERIAL_PRIVATE_INCLUDE
-#include "m_usb.h"
-
-#include "global.h"
-#include <avr/interrupt.h>
-#include <avr/io.h>
-#include <avr/pgmspace.h>
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-
-// // ---- OVERLOADS FOR M1 BACK COMPATIBILITY ----
-// #define usb_init() m_usb_init()
-// #define usb_configured() m_usb_isconnected()
-
-// #define usb_rx_available() m_usb_rx_available()
-// #define usb_rx_flush() m_usb_rx_flush()
-// #define usb_rx_char() m_usb_rx_char()
-
-// #define usb_tx_char(val) m_usb_tx_char(val)
-// #define usb_tx_hex(val) m_usb_tx_hex(val)
-// #define usb_tx_decimal(val) m_usb_tx_uint(val)
-// #define usb_tx_string(val) m_usb_tx_string(val)
-// #define usb_tx_push() m_usb_tx_push()
-
-// #define m_usb_rx_ascii() m_usb_rx_char()
-// #define m_usb_tx_ascii(val) m_usb_tx_char(val)
-
-// // EVERYTHING ELSE
-// // *****************************************************************
-
-// // setup
-
-// int8_t usb_serial_putchar(uint8_t c);  // transmit a character
-// int8_t usb_serial_putchar_nowait(
-//     uint8_t c);  // transmit a character, do not wait
-// int8_t usb_serial_write(const uint8_t *buffer,
-//                         uint16_t size);  // transmit a buffer
-// void print_P(const char *s);
-// void phex(unsigned char c);
-// void phex16(unsigned int i);
-// void m_usb_tx_hex8(unsigned char i);
-// void m_usb_tx_push(void);
-
-// // serial parameters
-// uint32_t usb_serial_get_baud(void);       // get the baud rate
-// uint8_t usb_serial_get_stopbits(void);    // get the number of stop bits
-// uint8_t usb_serial_get_paritytype(void);  // get the parity type
-// uint8_t usb_serial_get_numbits(void);     // get the number of data bits
-// uint8_t usb_serial_get_control(void);     // get the RTS and DTR signal state
-// int8_t usb_serial_set_control(uint8_t signals);  // set DSR, DCD, RI, etc
-
-// // constants corresponding to the various serial parameters
-// #define USB_SERIAL_DTR 0x01
-// #define USB_SERIAL_RTS 0x02
-// #define USB_SERIAL_1_STOP 0
-// #define USB_SERIAL_1_5_STOP 1
-// #define USB_SERIAL_2_STOP 2
-// #define USB_SERIAL_PARITY_NONE 0
-// #define USB_SERIAL_PARITY_ODD 1
-// #define USB_SERIAL_PARITY_EVEN 2
-// #define USB_SERIAL_PARITY_MARK 3
-// #define USB_SERIAL_PARITY_SPACE 4
-// #define USB_SERIAL_DCD 0x01
-// #define USB_SERIAL_DSR 0x02
-// #define USB_SERIAL_BREAK 0x04
-// #define USB_SERIAL_RI 0x08
-// #define USB_SERIAL_FRAME_ERR 0x10
-// #define USB_SERIAL_PARITY_ERR 0x20
-// #define USB_SERIAL_OVERRUN_ERR 0x40
-
-// // This file does not include the HID debug functions, so these empty
-// // macros replace them with nothing, so users can compile code that
-// // has calls to these functions.
-// #define usb_debug_putchar(c)
-// #define usb_debug_flush_output()
-
-// #define EP_TYPE_CONTROL 0x00
-// #define EP_TYPE_BULK_IN 0x81
-// #define EP_TYPE_BULK_OUT 0x80
-// #define EP_TYPE_INTERRUPT_IN 0xC1
-// #define EP_TYPE_INTERRUPT_OUT 0xC0
-// #define EP_TYPE_ISOCHRONOUS_IN 0x41
-// #define EP_TYPE_ISOCHRONOUS_OUT 0x40
-// #define EP_SINGLE_BUFFER 0x02
-// #define EP_DOUBLE_BUFFER 0x06
-// #define EP_SIZE(s)
-//   ((s) == 64 ? 0x30 : ((s) == 32 ? 0x20 : ((s) == 16 ? 0x10 : 0x00)))
-
-// #define MAX_ENDPOINT 4
-
-// #define LSB(n) (n & 255)
-// #define MSB(n) ((n >> 8) & 255)
-
-// #define HW_CONFIG() (UHWCON = 0x01)
-
-// #ifdef M1
-// #define PLL_CONFIG() (PLLCSR = 0x02)  // fixed to 8MHz clock
-// #else
-// #define PLL_CONFIG() (PLLCSR = 0x12)  // 0001 0010 For a 16MHz clock
-// #endif
-
-// #define USB_CONFIG() (USBCON = ((1 << USBE) | (1 << OTGPADE)))
-// #define USB_FREEZE() (USBCON = ((1 << USBE) | (1 << FRZCLK)))
-
-// // standard control endpoint request types
-// #define GET_STATUS 0
-// #define CLEAR_FEATURE 1
-// #define SET_FEATURE 3
-// #define SET_ADDRESS 5
-// #define GET_DESCRIPTOR 6
-// #define GET_CONFIGURATION 8
-// #define SET_CONFIGURATION 9
-// #define GET_INTERFACE 10
-// #define SET_INTERFACE 11
-// // HID (human interface device)
-// #define HID_GET_REPORT 1
-// #define HID_GET_PROTOCOL 3
-// #define HID_SET_REPORT 9
-// #define HID_SET_IDLE 10
-// #define HID_SET_PROTOCOL 11
-// // CDC (communication class device)
-// #define CDC_SET_LINE_CODING 0x20
-// #define CDC_GET_LINE_CODING 0x21
-// #define CDC_SET_CONTROL_LINE_STATE 0x22
+#include "usb/usb_serial.h"
 
 /**************************************************************************
  *
@@ -138,15 +39,58 @@
  *
  **************************************************************************/
 
-#define STR_MANUFACTURER       L"J. Fiene"
-#define STR_PRODUCT            L"M2"
-#define STR_SERIAL_NUMBER      L"410"
-#define VENDOR_ID              0x16C0 // must match INF file in Windows
-#define PRODUCT_ID             0x047A // must match INF file in Windows
-#define TRANSMIT_FLUSH_TIMEOUT 5      /* in milliseconds */
-#define TRANSMIT_TIMEOUT       25     /* in milliseconds */
-#define SUPPORT_ENDPOINT_HALT  // can save 116 bytes by removing, makes fully
-                               // USB compliant
+// You can change these to give your code its own name.  On Windows,
+// these are only used before an INF file (driver install) is loaded.
+#define STR_MANUFACTURER L"Your Name"
+#define STR_PRODUCT      L"USB Serial"
+
+// All USB serial devices are supposed to have a serial number
+// (according to Microsoft).  On windows, a new COM port is created
+// for every unique serial/vendor/product number combination.  If
+// you program 2 identical boards with 2 different serial numbers
+// and they are assigned COM7 and COM8, each will always get the
+// same COM port number because Windows remembers serial numbers.
+//
+// On Mac OS-X, a device file is created automatically which
+// incorperates the serial number, eg, /dev/cu-usbmodem12341
+//
+// Linux by default ignores the serial number, and creates device
+// files named /dev/ttyACM0, /dev/ttyACM1... in the order connected.
+// Udev rules (in /etc/udev/rules.d) can define persistent device
+// names linked to this serial number, as well as permissions, owner
+// and group settings.
+#define STR_SERIAL_NUMBER L"12345"
+
+// Mac OS-X and Linux automatically load the correct drivers.  On
+// Windows, even though the driver is supplied by Microsoft, an
+// INF file is needed to load the driver.  These numbers need to
+// match the INF file.
+#define VENDOR_ID  0x16C0
+#define PRODUCT_ID 0x047A
+
+// When you write data, it goes into a USB endpoint buffer, which
+// is transmitted to the PC when it becomes full, or after a timeout
+// with no more writes.  Even if you write in exactly packet-size
+// increments, this timeout is used to send a "zero length packet"
+// that tells the PC no more data is expected and it should pass
+// any buffered data to the application that may be waiting.  If
+// you want data sent immediately, call usb_serial_flush_output().
+#define TRANSMIT_FLUSH_TIMEOUT 5 /* in milliseconds */
+
+// If the PC is connected but not "listening", this is the length
+// of time before usb_serial_getchar() returns with an error.  This
+// is roughly equivilant to a real UART simply transmitting the
+// bits on a wire where nobody is listening, except you get an error
+// code which you can ignore for serial-like discard of data, or
+// use to know your data wasn't sent.
+#define TRANSMIT_TIMEOUT 25 /* in milliseconds */
+
+// USB devices are supposed to implment a halt feature, which is
+// rarely (if ever) used.  If you comment this line out, the halt
+// code will be removed, saving 116 bytes of space (gcc 4.3.0).
+// This is not strictly USB compliant, but works with all major
+// operating systems.
+#define SUPPORT_ENDPOINT_HALT
 
 /**************************************************************************
  *
@@ -154,16 +98,30 @@
  *
  **************************************************************************/
 
+// These buffer sizes are best for most applications, but perhaps if you
+// want more buffering on some endpoint at the expense of others, this
+// is where you can make such changes.  The AT90USB162 has only 176 bytes
+// of DPRAM (USB buffers) and only endpoints 3 & 4 can double buffer.
+
 #define ENDPOINT0_SIZE   16
 #define CDC_ACM_ENDPOINT 2
 #define CDC_RX_ENDPOINT  3
 #define CDC_TX_ENDPOINT  4
-#define CDC_ACM_SIZE     16
-#define CDC_ACM_BUFFER   EP_SINGLE_BUFFER
-#define CDC_RX_SIZE      64
-#define CDC_RX_BUFFER    EP_DOUBLE_BUFFER
-#define CDC_TX_SIZE      64
-#define CDC_TX_BUFFER    EP_DOUBLE_BUFFER
+#if defined(__AVR_AT90USB162__)
+#define CDC_ACM_SIZE   16
+#define CDC_ACM_BUFFER EP_SINGLE_BUFFER
+#define CDC_RX_SIZE    32
+#define CDC_RX_BUFFER  EP_DOUBLE_BUFFER
+#define CDC_TX_SIZE    32
+#define CDC_TX_BUFFER  EP_DOUBLE_BUFFER
+#else
+#define CDC_ACM_SIZE   16
+#define CDC_ACM_BUFFER EP_SINGLE_BUFFER
+#define CDC_RX_SIZE    64
+#define CDC_RX_BUFFER  EP_DOUBLE_BUFFER
+#define CDC_TX_SIZE    64
+#define CDC_TX_BUFFER  EP_DOUBLE_BUFFER
+#endif
 
 static const uint8_t PROGMEM endpoint_config_table[] = {
     0,
@@ -182,6 +140,12 @@ static const uint8_t PROGMEM endpoint_config_table[] = {
  *  Descriptor Data
  *
  **************************************************************************/
+
+// Descriptors are the data that your computer reads when it auto-detects
+// this USB device (called "enumeration" in USB lingo).  The most commonly
+// changed items are editable at the top of this file.  Changing things
+// in here should only be done by those who've read chapter 9 of the USB
+// spec and relevant portions of any USB class specifications!
 
 static const uint8_t PROGMEM device_descriptor[] = {
     18, // bLength
@@ -289,7 +253,7 @@ struct usb_string_descriptor_struct
 {
     uint8_t bLength;
     uint8_t bDescriptorType;
-    wchar_t wString[];
+    int16_t wString[];
 };
 static const struct usb_string_descriptor_struct PROGMEM string0 = {
     4, 3, {0x0409}};
@@ -344,7 +308,7 @@ static uint8_t cdc_line_rtsdtr    = 0;
  **************************************************************************/
 
 // initialize USB serial
-void m_usb_init(void)
+void usb_init(void)
 {
     HW_CONFIG();
     USB_FREEZE(); // enable USB
@@ -361,10 +325,10 @@ void m_usb_init(void)
 
 // return 0 if the USB is not configured, or the configuration
 // number selected by the HOST
-char m_usb_isconnected(void) { return (char)usb_configuration; }
+uint8_t usb_configured(void) { return usb_configuration; }
 
 // get the next character, or -1 if nothing received
-char m_usb_rx_char(void)
+int16_t usb_serial_getchar(void)
 {
     uint8_t c, intr_state;
 
@@ -379,9 +343,16 @@ char m_usb_rx_char(void)
         return -1;
     }
     UENUM = CDC_RX_ENDPOINT;
-    if (!(UEINTX & (1 << RWAL)))
+retry:
+    c = UEINTX;
+    if (!(c & (1 << RWAL)))
     {
         // no data in buffer
+        if (c & (1 << RXOUTI))
+        {
+            UEINTX = 0x6B;
+            goto retry;
+        }
         SREG = intr_state;
         return -1;
     }
@@ -391,13 +362,13 @@ char m_usb_rx_char(void)
     if (!(UEINTX & (1 << RWAL)))
         UEINTX = 0x6B;
     SREG = intr_state;
-    return (char)c;
+    return c;
 }
 
 // number of bytes available in the receive buffer
-unsigned char m_usb_rx_available(void)
+uint8_t usb_serial_available(void)
 {
-    uint8_t n  = 0, intr_state;
+    uint8_t n  = 0, i, intr_state;
 
     intr_state = SREG;
     cli();
@@ -405,13 +376,19 @@ unsigned char m_usb_rx_available(void)
     {
         UENUM = CDC_RX_ENDPOINT;
         n     = UEBCLX;
+        if (!n)
+        {
+            i = UEINTX;
+            if (i & (1 << RXOUTI) && !(i & (1 << RWAL)))
+                UEINTX = 0x6B;
+        }
     }
     SREG = intr_state;
-    return (unsigned char)n;
+    return n;
 }
 
 // discard any buffered input
-void m_usb_rx_flush(void)
+void usb_serial_flush_input(void)
 {
     uint8_t intr_state;
 
@@ -429,7 +406,7 @@ void m_usb_rx_flush(void)
 }
 
 // transmit a character.  0 returned on success, -1 on error
-char m_usb_tx_char(unsigned char c)
+int8_t usb_serial_putchar(uint8_t c)
 {
     uint8_t timeout, intr_state;
 
@@ -441,28 +418,25 @@ char m_usb_tx_char(unsigned char c)
     // even both in the same program!
     intr_state = SREG;
     cli();
-    UENUM = CDC_TX_ENDPOINT; // select the endpoint to be used for CDC tx
+    UENUM = CDC_TX_ENDPOINT;
     // if we gave up due to timeout before, don't wait again
     if (transmit_previous_timeout)
     {
-        if (!(UEINTX & (1 << RWAL))) // check if there is room in the buffer
+        if (!(UEINTX & (1 << RWAL)))
         {
-            // if not and we are not waiting return error
-            SREG = intr_state; // enables interupts if they were enabled
+            SREG = intr_state;
             return -1;
         }
         transmit_previous_timeout = 0;
     }
     // wait for the FIFO to be ready to accept data
-    timeout =
-        UDFNUML + TRANSMIT_TIMEOUT; // current 8 lower bits of frame number
-    // 1 frame per ms so the timeout is as simple as adding a number of frames
+    timeout = UDFNUML + TRANSMIT_TIMEOUT;
     while (1)
     {
         // are we ready to transmit?
         if (UEINTX & (1 << RWAL))
             break;
-        SREG = intr_state; // enables interupts if they were enabled
+        SREG = intr_state;
         // have we waited too long?  This happens if the user
         // is not running an application that is listening
         if (UDFNUML == timeout)
@@ -474,17 +448,17 @@ char m_usb_tx_char(unsigned char c)
         if (!usb_configuration)
             return -1;
         // get ready to try checking again
-        intr_state = SREG; // save SREG state and disable interupts
+        intr_state = SREG;
         cli();
         UENUM = CDC_TX_ENDPOINT;
     }
     // actually write the byte into the FIFO
-    UEDATX = (uint8_t)c;
+    UEDATX = c;
     // if this completed a packet, transmit it now!
     if (!(UEINTX & (1 << RWAL)))
-        UEINTX = 0x3A; // not sure what setting this does
+        UEINTX = 0x3A;
     transmit_flush_timer = TRANSMIT_FLUSH_TIMEOUT;
-    SREG                 = intr_state; // restore interupts
+    SREG                 = intr_state;
     return 0;
 }
 
@@ -729,8 +703,8 @@ int8_t usb_serial_write(const uint8_t *buffer, uint16_t size)
         if (!(UEINTX & (1 << RWAL)))
             UEINTX = 0x3A;
         transmit_flush_timer = TRANSMIT_FLUSH_TIMEOUT;
+        SREG                 = intr_state;
     }
-    SREG = intr_state;
     return 0;
 }
 
@@ -738,7 +712,7 @@ int8_t usb_serial_write(const uint8_t *buffer, uint16_t size)
 // This doesn't actually transmit the data - that is impossible!
 // USB devices only transmit when the host allows, so the best
 // we can do is release the FIFO buffer for when the host wants it
-void m_usb_tx_push(void)
+void usb_serial_flush_output(void)
 {
     uint8_t intr_state;
 
@@ -758,11 +732,7 @@ void m_usb_tx_push(void)
 // at full USB speed), but they are set by the host so we can
 // set them properly if we're converting the USB to a real serial
 // communication
-
-// uint32_t usb_serial_get_baud(void)
-//{
-//	return *(uint32_t *)cdc_line_coding;
-// }
+uint32_t usb_serial_get_baud(void) { return *(uint32_t *)cdc_line_coding; }
 uint8_t usb_serial_get_stopbits(void) { return cdc_line_coding[4]; }
 uint8_t usb_serial_get_paritytype(void) { return cdc_line_coding[5]; }
 uint8_t usb_serial_get_numbits(void) { return cdc_line_coding[6]; }
@@ -773,8 +743,6 @@ uint8_t usb_serial_get_control(void) { return cdc_line_rtsdtr; }
 // it remains buffered (either here or on the host) and can not be
 // lost because you weren't listening at the right time, like it
 // would in real serial communication.
-// TODO: this function is untested.  Does it work?  Please email
-// paul@pjrc.com if you have tried it....
 int8_t usb_serial_set_control(uint8_t signals)
 {
     uint8_t intr_state;
@@ -801,12 +769,11 @@ int8_t usb_serial_set_control(uint8_t signals)
     UEDATX = 0x20;
     UEDATX = 0;
     UEDATX = 0;
-    UEDATX = 0; // TODO: should this be 1 or 0 ???
+    UEDATX = 0; // 0 seems to work nicely.  what if this is 1??
     UEDATX = 0;
-    UEDATX = 2;
+    UEDATX = 1;
     UEDATX = 0;
     UEDATX = signals;
-    UEDATX = 0;
     UEINTX = 0x3A;
     SREG   = intr_state;
     return 0;
@@ -825,14 +792,13 @@ ISR(USB_GEN_vect)
 {
     uint8_t intbits, t;
 
-    intbits = UDINT; // save the int flags for USB
-    UDINT   = 0;     // and clear them
+    intbits = UDINT;
+    UDINT   = 0;
     if (intbits & (1 << EORSTI))
     {
-        // if end of reset int flag
-        UENUM             = 0;               // endpoint reg set to 0
-        UECONX            = 1;               // enable the endpoint selected
-        UECFG0X           = EP_TYPE_CONTROL; // set the endpoint type to control
+        UENUM             = 0;
+        UECONX            = 1;
+        UECFG0X           = EP_TYPE_CONTROL;
         UECFG1X           = EP_SIZE(ENDPOINT0_SIZE) | EP_SINGLE_BUFFER;
         UEIENX            = (1 << RXSTPE);
         usb_configuration = 0;
@@ -840,19 +806,14 @@ ISR(USB_GEN_vect)
     }
     if (intbits & (1 << SOFI))
     {
-        // if the start of frame package was detected
         if (usb_configuration)
         {
-            // if the device is enumerated
             t = transmit_flush_timer;
             if (t)
             {
-                // if there is a non-zero timeout, save it to the timer
                 transmit_flush_timer = --t;
                 if (!t)
                 {
-                    // if the timer is now zero, set the enpoint and send the
-                    // buffer
                     UENUM  = CDC_TX_ENDPOINT;
                     UEINTX = 0x3A;
                 }
@@ -895,66 +856,49 @@ ISR(USB_COM_vect)
     const uint8_t *desc_addr;
     uint8_t desc_length;
 
-    UENUM   = 0;      // set the endpoint selected to 0
-    intbits = UEINTX; // get the tx flags
+    UENUM   = 0;
+    intbits = UEINTX;
     if (intbits & (1 << RXSTPI))
     {
-        // if received the SETUP packet
-        bmRequestType = UEDATX; // pop a byte from the buffer
-        bRequest      = UEDATX; // pop a byte from the buffer
-        wValue        = UEDATX; // pop a byte from the buffer (wValue low byte)
-        wValue |=
-            (UEDATX << 8); // pop a byte from the buffer (wValue high byte)
-        wIndex = UEDATX;   // pop a byte from the buffer (wIndex low byte)
-        wIndex |=
-            (UEDATX << 8); // pop a byte from the buffer (wIndex high byte)
-        wLength = UEDATX;  // pop a byte from the buffer (wLength low byte)
-        wLength |=
-            (UEDATX << 8); // pop a byte from the buffer (wLength high byte)
-        UEINTX = ~((1 << RXSTPI) | (1 << RXOUTI) |
-                   (1 << TXINI)); // clear setup received flag, out data flag,
-                                  // tx ready flag
+        bmRequestType = UEDATX;
+        bRequest      = UEDATX;
+        wValue        = UEDATX;
+        wValue |= (UEDATX << 8);
+        wIndex = UEDATX;
+        wIndex |= (UEDATX << 8);
+        wLength = UEDATX;
+        wLength |= (UEDATX << 8);
+        UEINTX = ~((1 << RXSTPI) | (1 << RXOUTI) | (1 << TXINI));
         if (bRequest == GET_DESCRIPTOR)
         {
-            // if request type is get descriptor
-            list = (const uint8_t *)
-                descriptor_list; // set list pointer to descriptor list start
+            list = (const uint8_t *)descriptor_list;
             for (i = 0;; i++)
             {
-                // iterate through it
                 if (i >= NUM_DESC_LIST)
                 {
-                    // if list has been exhausted
-
                     UECONX = (1 << STALLRQ) | (1 << EPEN); // stall
                     return;
                 }
-                desc_val = pgm_read_word(list); //
+                desc_val = pgm_read_word(list);
                 if (desc_val != wValue)
                 {
-                    // if the descriptor doesn't equal the descriptor recieved
-                    // go to the next descriptor
                     list += sizeof(struct descriptor_list_struct);
                     continue;
                 }
-                list += 2; // go to wIndex entry
+                list += 2;
                 desc_val = pgm_read_word(list);
                 if (desc_val != wIndex)
                 {
-                    // if the index doesn't equal the index recieved
-                    // go to the next descriptor
                     list += sizeof(struct descriptor_list_struct) - 2;
                     continue;
                 }
-                list += 2; // go to the descriptor pointer
-                // retrieve the pointer to the start of the list
+                list += 2;
                 desc_addr = (const uint8_t *)pgm_read_word(list);
-                list += 2; // go to the descriptor length
+                list += 2;
                 desc_length = pgm_read_byte(list);
-                break; // all the requested data has been retrieved
+                break;
             }
-            len =
-                (wLength < 256) ? wLength : 255; // constrain the length to 255
+            len = (wLength < 256) ? wLength : 255;
             if (len > desc_length)
                 len = desc_length;
             do
@@ -1086,89 +1030,4 @@ ISR(USB_COM_vect)
 #endif
     }
     UECONX = (1 << STALLRQ) | (1 << EPEN); // stall
-}
-
-// BELOW FROM PRINT.C
-
-void print_P(const char *s)
-{
-    char c;
-
-    while (1)
-    {
-        c = pgm_read_byte(s++);
-        if (!c)
-            break;
-        if (c == '\n')
-            usb_tx_char('\r');
-        usb_tx_char(c);
-    }
-}
-
-void phex1(unsigned char c) { usb_tx_char(c + ((c < 10) ? '0' : 'A' - 10)); }
-
-void phex(unsigned char c)
-{
-    phex1(c >> 4);
-    phex1(c & 15);
-}
-
-void m_usb_tx_hex(unsigned int i)
-{
-    phex(i >> 8);
-    phex(i);
-}
-
-void m_usb_tx_hexchar(unsigned char i) { phex(i); }
-
-void m_usb_tx_int(int i)
-{
-    char string[7] = {0, 0, 0, 0, 0, 0, 0};
-    itoa(i, string, 10);
-    for (i = 0; i < 7; i++)
-    {
-        if (string[i])
-        {
-            m_usb_tx_char(string[i]);
-        }
-    }
-}
-
-void m_usb_tx_uint(unsigned int i)
-{
-    char string[6] = {0, 0, 0, 0, 0, 0};
-    utoa(i, string, 10);
-    for (i = 0; i < 5; i++)
-    {
-        if (string[i])
-        {
-            m_usb_tx_char(string[i]);
-        }
-    }
-}
-
-void m_usb_tx_long(long i)
-{
-    char string[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    ltoa(i, string, 10);
-    for (i = 0; i < 11; i++)
-    {
-        if (string[i])
-        {
-            m_usb_tx_char(string[i]);
-        }
-    }
-}
-
-void m_usb_tx_ulong(unsigned long i)
-{
-    char string[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    ultoa(i, string, 10);
-    for (i = 0; i < 10; i++)
-    {
-        if (string[i])
-        {
-            m_usb_tx_char(string[i]);
-        }
-    }
 }
