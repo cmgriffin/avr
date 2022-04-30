@@ -9,6 +9,36 @@
 //#define DEBUG_SHORT
 #include <debug.h>
 
+#define CLEAR                  0x01
+#define HOME                   0x02
+
+#define ENTRYMD_INC_CURSOR     (0x02 | 0x04)
+#define ENTRYMD_DEC_CURSOR     (0x00 | 0x04)
+#define ENTRYMD_FOLLOW_SHIFT   (0x01 | 0x04)
+#define ENTRYMD_NOFOLLOW_SHIFT (0x00 | 0x04)
+
+#define ONOFF_DISP_OFF         (0x00 | 0x08)
+#define ONOFF_DISP_ON          (0x04 | 0x08)
+#define ONOFF_CURSOR_OFF       (0x00 | 0x08)
+#define ONOFF_CURSOR_ON        (0x02 | 0x08)
+#define ONOFF_CURSOR_NOBLINK   (0x00 | 0x08)
+#define ONOFF_CURSOR_BLINK     (0x01 | 0x08)
+
+#define SHIFT_DISP_SHIFT       (0x08 | 0x10)
+#define SHIFT_CURSOR_SHIFT     (0x00 | 0x10)
+#define SHIFT_SHIFT_RIGHT      (0x04 | 0x10)
+#define SHIFT_SHIFT_LEFT       (0x00 | 0x10)
+
+#define FUNC_EIGHTBITS         (0x10 | 0x20)
+#define FUNC_FOURBITS          (0x00 | 0x20)
+#define FUNC_TWOLINE           (0x08 | 0x20)
+#define FUNC_ONELINE           (0x00 | 0x20)
+#define FUNC_CHAR5X10          (0x04 | 0x20)
+#define FUNC_CHAR5X8           (0x00 | 0x20)
+
+#define SET_CGRAM_ADDR         0x40
+#define SET_DDRAM_ADDR         0x80
+
 #ifndef D3
 #define _4BIT_MODE
 #else
@@ -240,34 +270,37 @@ void HD44780_init()
 
     __setDataOutput();
 
+    // intialization routine just in case this didn't happen automatically
+    __writeInstrReg_8bit(FUNC_EIGHTBITS);
+    _delay_ms(4.2);
+    __writeInstrReg_8bit(FUNC_EIGHTBITS);
+    _delay_us(110);
+    __writeInstrReg_8bit(FUNC_EIGHTBITS); // make sure in 8 bit mode first
+    __wait();
+
 #ifdef _8BIT_MODE
-    __writeInstrReg(0x38); // set 8-bit mode, 2-lines, 5x8 font
+    __writeInstrReg(FUNC_EIGHTBITS | FUNC_TWOLINE |
+                    FUNC_CHAR5X8); // set 8-bit mode, 2-lines, 5x8 font
 #elif defined(_4BIT_MODE)
     // special write in 8-bit mode to change to 4-bit
     // since we can't do the wait we make sure sure the display is actually
     // in 8-bit mode before going to 4 bit mode
-    __writeInstrReg_8bit(0x30); // make sure in 8 bit mode first
-    _delay_ms(1);
-    __writeInstrReg_8bit(0x30); // make sure in 8 bit mode first
-    _delay_ms(1);
-    __writeInstrReg_8bit(0x30); // make sure in 8 bit mode first
-    _delay_ms(1);
-    __writeInstrReg_8bit(0x20); // just set to 4-bit mode first
-    __writeInstrReg(0x28);      // set 4-bit mode, 2-lines, 5x8 font
+    __writeInstrReg_8bit(FUNC_FOURBITS); // just set to 4-bit mode first
+    __writeInstrReg(FUNC_FOURBITS | FUNC_TWOLINE | FUNC_CHAR5X8);
 #endif
-    __writeInstrReg(0x0C); // display on, cursor off, blink off
-    __writeInstrReg(0x06); // increment and shift cursor, don't shift display
-    __writeInstrReg(0x01); // clear the display
+    __writeInstrReg(ONOFF_DISP_ON | ONOFF_CURSOR_OFF | ONOFF_CURSOR_NOBLINK);
+    __writeInstrReg(ENTRYMD_INC_CURSOR | ENTRYMD_NOFOLLOW_SHIFT);
+    __writeInstrReg(CLEAR); // clear the display
 }
 
 void HD44780_clear()
 {
-    __writeInstrReg(0x01); // clear the display
+    __writeInstrReg(CLEAR); // clear the display
 }
 
 void HD44780_setCursor(uint8_t col, uint8_t row)
 {
-    __writeInstrReg(0x80 + (row ? 0x40 : 0) + col);
+    __writeInstrReg(SET_DDRAM_ADDR + (row ? 0x40 : 0) + col);
 }
 
 bool HD44780_printChar(uint8_t c, bool blocking)
@@ -275,7 +308,7 @@ bool HD44780_printChar(uint8_t c, bool blocking)
     _DEBUG("HD44780_printChar(%c)", c);
     if (c == '\n')
     {
-        __writeInstrReg(0xC0); // go to next line
+        __writeInstrReg(SET_DDRAM_ADDR + 0x40); // go to next line
         return true;
     }
     if (c == '\r')
@@ -286,7 +319,7 @@ bool HD44780_printChar(uint8_t c, bool blocking)
 
     if ((__readInstrReg() & 0x7f) == 16)
     {
-        __writeInstrReg(0xC0); // go to next line
+        __writeInstrReg(SET_DDRAM_ADDR + 0x40); // go to next line
     }
     return true;
 }
