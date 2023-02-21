@@ -1,11 +1,11 @@
-#include "serial_commands.h"
+#include "control/scmd.h"
 #include "debug.h"
 #include <avr/pgmspace.h>
 #include <stdlib.h>
 #include <string.h>
 
 bool checkForMatch(const char *token, const char *checkCmd,
-                   callback_args_t *cb_args)
+                   SCMD_callback_args_t *cb_args)
 {
     size_t checkCmdLength = strlen_P(checkCmd);
     if (!strncasecmp_P(token, checkCmd, checkCmdLength))
@@ -34,10 +34,13 @@ bool checkForMatch(const char *token, const char *checkCmd,
     return false;
 }
 
-void handleSerialCommands(serial_command_t *sCmd, char *msg)
+void SCMD_processCmd(const SCMD_t *sCmd, char *msg)
 {
     char *token;
     uint8_t foundCmd = 0;
+
+    // get the pointer to the list of commands
+    const SCMD_cmd_t *cmds = (const SCMD_cmd_t *)pgm_read_word(&sCmd->cmds);
 
     _DEBUG("command string received: %s", msg);
     token = strtok_P(
@@ -46,26 +49,25 @@ void handleSerialCommands(serial_command_t *sCmd, char *msg)
 
     for (uint8_t i = 0; i < pgm_read_byte(&(sCmd->n_cmds)); i++)
     {
-        const char *cmd         = (PGM_P)pgm_read_word(&(sCmd->cmds[i].cmd_str));
-
-        callback_args_t cb_args = {
+        SCMD_callback_args_t cb_args = {
             .cmd_args = NULL, .query = false, .var = NULL};
-        if (checkForMatch(token, cmd, &cb_args))
+        if (checkForMatch(token, (PGM_P)pgm_read_word(&(cmds[i].cmd_str)),
+                          &cb_args))
         {
             foundCmd         = 1;
             cb_args.cmd_args = strtok_P(NULL, "");
-            cb_args.var      = (void *)pgm_read_ptr(&(sCmd->cmds[i].var));
+            cb_args.var      = (void *)pgm_read_ptr(&(cmds[i].var));
             int8_t result =
-                ((callback_t)pgm_read_word(&(sCmd->cmds[i].callback)))(&cb_args);
+                ((SCMD_callback_t)pgm_read_word(&(cmds[i].callback)))(&cb_args);
             if (result == 0)
-                ((result_callback_t)pgm_read_word(&(sCmd->ok_cmd)))();
+                ((SCMD_result_callback_t)pgm_read_word(&(sCmd->ok_cmd)))();
             else
-                ((result_callback_t)pgm_read_word(&(sCmd->error_cmd)))();
+                ((SCMD_result_callback_t)pgm_read_word(&(sCmd->error_cmd)))();
             break;
         }
     }
     if (!foundCmd) // executed if the command didn't match any of the options
     {
-        ((result_callback_t)pgm_read_word(&(sCmd->error_cmd)))();
+        ((SCMD_result_callback_t)pgm_read_word(&(sCmd->error_cmd)))();
     }
 }
