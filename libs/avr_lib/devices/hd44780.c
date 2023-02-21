@@ -6,7 +6,7 @@
 #include <gpio.h>
 #include <util/delay.h>
 
-//#define DEBUG_SHORT
+// #define DEBUG_SHORT
 #include <debug.h>
 
 #ifndef D3
@@ -237,6 +237,15 @@ void HD44780_init()
     GPIO_setOutput(&((GPIO_TypeDef)EN));
 
     __setDataOutput();
+
+    // intialization routine just in case this didn't happen automatically
+    _delay_ms(100);
+    __writeInstrReg_8bit(FUNC_EIGHTBITS);
+    _delay_ms(4.2);
+    __writeInstrReg_8bit(FUNC_EIGHTBITS);
+    _delay_us(110);
+    __writeInstrReg_8bit(FUNC_EIGHTBITS); // make sure in 8 bit mode first
+    __wait();
 
 #ifdef _8BIT_MODE
     __writeInstrReg(0x38); // set 8-bit mode, 2-lines, 5x8 font
