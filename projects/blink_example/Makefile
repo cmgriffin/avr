@@ -5,7 +5,7 @@
 ##########------------------------------------------------------##########
 
 MCU   = atmega328p
-#SERIAL_PORT = COM6
+SERIAL_PORT = COM6
 SERIAL_BAUD = 9600
 #UPLOAD_BAUD = 57600 # arduino nano clone needs default overrided
 PROGRAMMER_TYPE = arduino

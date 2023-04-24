@@ -2,55 +2,64 @@
 #include <avr/pgmspace.h>
 #include <stdio.h>
 #include <uart.h>
-#include <util/delay.h>
+// #include <util/delay.h>
 
-#define printp(fmt, args...) printf_P(PSTR("" fmt "\n"), args)
+#define print(fmt, ...) printf_P(PSTR(fmt), ##__VA_ARGS__)
 
-const char str0[] PROGMEM  = "Hello World0!\n";
-const char str1[] PROGMEM  = "Hello World1!\n";
-const char str2[] PROGMEM  = "Hello World2!\n";
-const char str3[] PROGMEM  = "Hello World3!\n";
-const char str4[] PROGMEM  = "Hello World4!\n";
-
-const char label[] PROGMEM = "list0";
-// const char *const strs[] PROGMEM = {str0, str1, str2, str3, str4};
-
-typedef struct node
+typedef struct
 {
-    const char *str;
-    uint8_t n;
-} node;
+    const uint8_t type_num;
+    const int8_t exp;
+    const int16_t default_val;
+    const int16_t min_val;
+    const int16_t max_val;
+    const char name[20];
+} menuItem_t;
 
-typedef struct list
-{
-    uint8_t n_nodes;
-    const char *label;
-    const node *nodes;
-} list;
+// const menuItem_t item0 PROGMEM        = {0, 0, 10, 0, 100, "MenuItem0"};
+// const menuItem_t item1 PROGMEM        = {0, -1, 10, 0, 100, "MenuItem1"};
+// const menuItem_t item2 PROGMEM        = {0, -2, 10, 0, 100, "MenuItem2"};
+// const menuItem_t item3 PROGMEM        = {0, 1, 10, 0, 100, "MenuItem3"};
+// const menuItem_t item4 PROGMEM        = {0, 2, 10, 0, 100, "MenuItem4"};
 
-const node nodes[] PROGMEM = {
-    {str0, 0}, {str1, 1}, {str2, 2}, {str3, 3}, {str4, 4}};
+const menuItem_t PROGMEM menu_items[] = {{0, 0, 10, 0, 100, "MenuItem0"},
+                                         {0, -1, 10, 0, 100, "MenuItem1"}};
 
-const list l PROGMEM = {.n_nodes = 5, .label = label, .nodes = nodes};
-const list *lptr     = &l;
 int main(void)
 {
     UART_init();
-    // access a byte in the base struct
-    printp("read n_nodes: %d", (uint8_t)pgm_read_byte(&(lptr->n_nodes)));
-    // read the label string
-    printp("value of the label string: ", 0);
-    printf_P((PGM_P)pgm_read_word(&(lptr->label)));
-    printp("", 0);
+    // // access a byte in the base struct
+    // printp("read n_nodes: %d", (uint8_t)pgm_read_byte(&(lptr->n_nodes)));
+    // // read the label string
+    // printp("value of the label string: ", 0);
+    // printf_P((PGM_P)pgm_read_word(&(lptr->label)));
+    // printp("", 0);
 
-    // from the inner stuct
-    // get the pointer to the list from the upper struct
-    const node *n = (const node *)pgm_read_word(&lptr->nodes);
-    for (uint8_t i = 0; i < pgm_read_byte(&(lptr->n_nodes)); i++)
+    // // from the inner stuct
+    // // get the pointer to the list from the upper struct
+    // const node *n = (const node *)pgm_read_word(&lptr->nodes);
+
+    char str_buff[20];
+
+    for (uint8_t i = 0; i < (sizeof(menu_items) / sizeof(menu_items[0])); i++)
     {
-        printp("read n of node %d: %d", i, (uint8_t)pgm_read_byte(&(n[i].n)));
-        printp("read str of node %d: %S", i, (PGM_P)pgm_read_word(&(n[i].str)));
+        // strcpy_P(str_buff, menu_items[i].name);
+        print("%d name: %s, type_num: %d, exp: %d, default_val: %d, min_val: "
+              "%d, max_val:%d\n",
+              i, strcpy_P(str_buff, menu_items[i].name),
+              pgm_read_byte(&(menu_items[i].type_num)),
+              pgm_read_byte(&(menu_items[i].exp)),
+              pgm_read_byte(&(menu_items[i].default_val)),
+              pgm_read_byte(&(menu_items[i].min_val)),
+              pgm_read_byte(&(menu_items[i].max_val)));
     }
+
+    // for (uint8_t i = 0; i < pgm_read_byte(&(lptr->n_nodes)); i++)
+    // {
+    //     printp("read n of node %d: %d", i,
+    //     (uint8_t)pgm_read_byte(&(n[i].n))); printp("read str of node %d: %S",
+    //     i, (PGM_P)pgm_read_word(&(n[i].str)));
+    // }
 
     // for (uint8_t i = 0; i < 5; i++)
     // {

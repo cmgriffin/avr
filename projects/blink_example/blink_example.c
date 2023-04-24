@@ -1,17 +1,16 @@
 #include "global.h"
-#include <util/delay.h>
 #include <gpio.h>
+#include <util/delay.h>
 
 int main(void)
 {
-  GPIO_TypeDef led = D13;
-  GPIO_setOutput(&led);
+    GPIO_setOutput(&(GPIO_TypeDef)GPIO_D13);
 
-  for (;;)
-  {
-    GPIO_toggleValue(&led);
-    _delay_ms(1000);
-  }
+    for (;;)
+    {
+        GPIO_toggleValue(&(GPIO_TypeDef)GPIO_D13);
+        _delay_ms(1000);
+    }
 
-  return 0;
+    return 0;
 }
