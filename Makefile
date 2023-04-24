@@ -3,4 +3,4 @@
 .PHONY: clean
 
 clean:
-	find . -type f \( -name '*.d' -o -name '*.o' -o -name '*.elf' -o -name '*.hex' -o -name '*.lst' -o -name '*.map' \) -delete
+	find . -type f \(-o -name '*.d' -o -name '*.o' -o -name '*.elf' -o -name '*.hex' -o -name '*.lst' -o -name '*.map' \) -delete
