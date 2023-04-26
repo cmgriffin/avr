@@ -1,8 +1,8 @@
-/*___________________________________________________________________________________________________
-
-Title:
-        fat.h v1.0
-
+/**
+ * @brief fat.h v1.0
+ *
+ * Updated from work by original author below
+ *
 Description:
         File system driver for FAT16/32
 
@@ -17,7 +17,7 @@ Author:
 Donate:
         Software development takes time and effort so if you find this useful
 consider a small donation at: paypal.me/alientransducer
-_____________________________________________________________________________________________________*/
+
 
 /* ----------------------------- LICENSE - GNU GPL v3
 -----------------------------------------------
@@ -49,6 +49,8 @@ https://www.programming-electronics-diy.xyz/2022/07/sd-memory-card-library-for-a
 #ifndef FAT_H_
 #define FAT_H_
 
+#include <avrlibdefs.h>
+
 /*************************************************************
         USER DEFINED SETTINGS
 **************************************************************/
@@ -59,12 +61,11 @@ https://www.programming-electronics-diy.xyz/2022/07/sd-memory-card-library-for-a
 // shorter file names could be used instead
 #define FAT_MAX_FILENAME_LENGTH 30
 
+typedef int32_t INT_SIZE; // can be int32_t (default) or int64_t
+
 /*************************************************************
         SYSTEM DEFINES
 **************************************************************/
-#define true                       1
-#define false                      0
-
 #define FAT_TASK_SEARCH_SFN        1
 #define FAT_TASK_TABLE_COUNT_FREE  2
 #define FAT_TASK_TABLE_FIND_FREE   3
@@ -232,7 +233,7 @@ typedef uint16_t CLSTSIZE_t; // clusters
 typedef uint32_t CLSTSIZE_t; // clusters
 #endif
 
-/* Volume mounting return codes (MOUNT_RESULT) */
+/* Volume mounting return codes (FAT_MOUNT_RESULT) */
 typedef enum
 {
     MR_OK = 0,           // Succeeded
@@ -242,9 +243,9 @@ typedef enum
     MR_FAT_ERR,          // General FAT error
     MR_UNSUPPORTED_FS,   // Unsupported file system
     MR_UNSUPPORTED_BS    // Unsupported block size
-} MOUNT_RESULT;
+} FAT_MOUNT_RESULT;
 
-/* File function return codes (FRESULT) */
+/* File function return codes (FAT_FRESULT) */
 typedef enum
 {
     FR_OK = 0,          // Succeeded
@@ -261,7 +262,7 @@ typedef enum
                  // active dir is root
     FR_INDEX_OUT_OF_RANGE,
     FR_DEVICE_ERR // A hard error occurred in the low level disk I/O layer
-} FRESULT;
+} FAT_FRESULT;
 
 /* File system object structure (FAT) */
 typedef struct
@@ -292,7 +293,7 @@ typedef struct
     uint8_t BPB_SecPerClus;    // sectors per cluster
 } FAT;
 
-/* Directory object structure (DIR) */
+/* Directory object structure (FAT_DIR) */
 typedef struct
 {
     bool dir_open;
@@ -310,16 +311,15 @@ typedef struct
     uint16_t find_by_index;
     uint8_t filename_length;
     const char *ptr_path_buff;
-} DIR;
+} FAT_DIR;
 
-/* File information structure (FILE) */
+/* File information structure (FAT_FILE) */
 typedef struct
 {
     uint8_t file_err;    // abort flag (error code)
     FSIZE_t fptr;        // file read/write pointer (zeroed on file open)
     uint8_t file_attrib; // file attribute
-    // uint16_t	file_last_access_date;						// this is the date of last
-    // read or write
+    // uint16_t	file_last_access_date; // this is the date of last read or write
     uint16_t file_write_time; // time of last write. Note that file creation is
                               // considered a write
     uint16_t file_write_date; // date of last write. Note that file creation is
@@ -336,7 +336,7 @@ typedef struct
     bool file_open;
     bool w_sec_changed; // write sector changed
     bool eof;
-} FILE;
+} FAT_FILE;
 
 /*************************************************************
         MACRO FUNCTIONS
@@ -351,90 +351,207 @@ typedef struct
         FUNCTION PROTOTYPES
 **************************************************************/
 // Volume
-MOUNT_RESULT FAT_mountVolume(void);
+FAT_MOUNT_RESULT FAT_mountVolume(void);
+/*______________________________________________________________________________________________
+        Return volume free space in bytes
+_______________________________________________________________________________________________*/
 uint64_t FAT_volumeFreeSpace(void);
+/*______________________________________________________________________________________________
+        Return volume capacity in bytes
+_______________________________________________________________________________________________*/
 uint64_t FAT_volumeCapacity(void);
+/*______________________________________________________________________________________________
+        Return volume capacity in KiB
+_______________________________________________________________________________________________*/
 float FAT_volumeCapacityKB(void);
+/*______________________________________________________________________________________________
+        Return volume capacity in MiB
+_______________________________________________________________________________________________*/
 float FAT_volumeCapacityMB(void);
+/*______________________________________________________________________________________________
+        Return volume capacity in GiB
+_______________________________________________________________________________________________*/
 float FAT_volumeCapacityGB(void);
-FRESULT FAT_getLabel(char *label, uint32_t *vol_sn);
+/*______________________________________________________________________________________________
+        Returns the label and serial number of a volume
+
+        label		Pointer to the buffer to store the volume label.
+                                If the volume has no label, a null-string will
+be returned. The buffer array must be of type char and 12 bytes in size: 11 for
+                                volume label and 1 for the null.
+
+        vol_sn		Pointer to a uint32_t variable to store the volume
+serial number. Pass 0 if not needed.
+
+        Example:
+                                char label[12];
+                                uint32_t vol_sn = 0;
+                                FAT_getLabel(label, &vol_sn);
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_getLabel(char *label, uint32_t *vol_sn);
 
 // Other
+/*______________________________________________________________________________________________
+        Create time and date fields in FAT format with dummy values that could
+be substituted with values from a RTC
+_______________________________________________________________________________________________*/
 uint8_t FAT_createTimeMilli(void);
 uint16_t FAT_createTime(void);
 uint16_t FAT_createDate(void);
 
 // Directory
-FRESULT FAT_makeDir(const char *path);
-FRESULT FAT_openDir(DIR *dir_p, const char *path);
-FRESULT FAT_openDirByIndex(DIR *dir_p, FILE *finfo_p, uint16_t idx);
-FRESULT FAT_dirBack(DIR *dir_p);
-FRESULT FAT_findByIndex(DIR *dir_p, FILE *finfo_p, uint16_t idx);
-FRESULT FAT_findNext(DIR *dir_p, FILE *finfo_p);
-uint16_t FAT_dirCountItems(DIR *dir_p);
-static FRESULT _FAT_dirRegister(const char *path, uint8_t task);
+/*______________________________________________________________________________________________
+        Create a subdirectory at the specified path. Name of the subdirectory is
+the name after the last slash '/' in path.
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_makeDir(const char *path);
+/*______________________________________________________________________________________________
+        Open a directory using the given path
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_openDir(FAT_DIR *dir_p, const char *path);
+/*______________________________________________________________________________________________
+        Open a directory with the given index inside the active directory.
+        FAT_openDir() must be used before running this function.
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_openDirByIndex(FAT_DIR *dir_p, FAT_FILE *finfo_p, uint16_t idx);
+/*______________________________________________________________________________________________
+        Go to parent directory of active directory. If the active directory is
+Root, then the function will return FR_ROOT_DIR and active directory will remain
+Root.
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_dirBack(FAT_DIR *dir_p);
+
+/*______________________________________________________________________________________________
+        Get file info of the item in the directory with a specific index
+position. Index must start from 1. If index is greater than the number of items
+inside the directory, then FR_NOT_FOUND will be returned.
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_findByIndex(FAT_DIR *dir_p, FAT_FILE *finfo_p, uint16_t idx);
+/*______________________________________________________________________________________________
+        Get file info of the first or next item in the directory that was opened
+previously
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_findNext(FAT_DIR *dir_p, FAT_FILE *finfo_p);
+/*______________________________________________________________________________________________
+        Return the total number of files and folders inside the active directory
+_______________________________________________________________________________________________*/
+uint16_t FAT_dirCountItems(FAT_DIR *dir_p);
 
 // File
-FRESULT FAT_makeFile(const char *path);
-FRESULT FAT_fwriteFloat(FILE *fp, float nr, uint8_t nrOfDecimals);
-FRESULT FAT_fwriteInt(FILE *fp, INT_SIZE nr);
-FRESULT FAT_fwriteString(FILE *fp, const char *string);
-FRESULT FAT_fwrite(FILE *fp, const void *buff, uint16_t btw, uint16_t *bw);
-FRESULT FAT_ftruncate(FILE *fp);
-FRESULT FAT_fsync(FILE *fp);
-FRESULT FAT_fopen(DIR *dir_p, FILE *file_p, char *file_name);
-FRESULT FAT_fopenByIndex(DIR *dir_p, FILE *file_p, uint16_t idx);
-static void _FAT_freset(FILE *file_p);
-uint8_t *FAT_fread(FILE *file_p);
-FSIZE_t FAT_getFptr(FILE *fp);
-void FAT_fseekEnd(FILE *fp);
-void FAT_fseek(FILE *fp, FSIZE_t fptr);
-bool FAT_feof(FILE *fp);
-uint8_t FAT_ferror(FILE *fp);
-void FAT_fclear_error(FILE *fp);
-char *FAT_getFilename(void);
-uint16_t FAT_getItemIndex(DIR *dir_p);
-FSIZE_t FAT_getFileSize(FILE *finfo_p);
-uint16_t FAT_getWriteYear(FILE *finfo_p);
-uint8_t FAT_getWriteMonth(FILE *finfo_p);
-uint8_t FAT_getWriteDay(FILE *finfo_p);
-uint8_t FAT_getWriteHour(FILE *finfo_p);
-uint8_t FAT_getWriteMinute(FILE *finfo_p);
-uint8_t FAT_getWriteSecond(FILE *finfo_p);
-bool FAT_attrIsFolder(FILE *finfo_p);
-bool FAT_attrIsFile(FILE *finfo_p);
-bool FAT_attrIsHidden(FILE *finfo_p);
-bool FAT_attrIsSystem(FILE *finfo_p);
-bool FAT_attrIsReadOnly(FILE *finfo_p);
-bool FAT_attrIsArchive(FILE *finfo_p);
-static uint8_t _FAT_nextFileCluster(FILE *file_p);
+/*______________________________________________________________________________________________
+        Create a file at the specified path. Name of the file is the name after
+        the last slash '/' in path.
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_makeFile(const char *path);
+/*______________________________________________________________________________________________
+        Wrapper function of fwrite() used to convert a float number
+        into a string and write it to a file
 
-// System
-static void _FAT_removeChain(CLSTSIZE_t cluster);
-static FRESULT _FAT_updateFileInfo(FILE *fp, uint8_t task);
-static FRESULT _FAT_allocateCluster(CLSTSIZE_t *new_cluster,
-                                    CLSTSIZE_t new_cluster_val);
-static void _FAT_moveWindow(DIR *dir_p, CLSTSIZE_t start_cluster);
-static FRESULT _FAT_clearCluster(CLSTSIZE_t cluster, bool first_sector);
-static CLSTSIZE_t FAT_tableFindFree(uint8_t task);
-static unsigned char ChkSum(unsigned char *pFcbName);
-static void _FAT_stringLFN(uint16_t start_idx, uint16_t length,
-                           const char **data, uint8_t data_size);
-static void _FAT_fillBufferArray(uint16_t start_idx, uint16_t length,
-                                 uint8_t value);
-static void _FAT_getSFN(uint8_t entry_pos, uint8_t task, uint8_t file_attrib);
-static FRESULT _FAT_followPath(DIR *dir_p, const char *path, uint8_t task);
-static FRESULT _FAT_createSFN(DIR *dir_p, const char *source, char dest[],
-                              bool *needs_lfn);
-static FRESULT _FAT_getFileNextSector(DIR *dir_p);
-static uint16_t MATH_remainder(uint16_t divident, uint16_t divisor,
-                               uint16_t quotient);
-static SECTSIZE_t _FAT_clusterToSector(CLSTSIZE_t cluster);
-static CLSTSIZE_t _FAT_tableReadSet(CLSTSIZE_t cluster, CLSTSIZE_t new_value,
-                                    uint8_t task);
-static void _FAT_parse_long_names(char buff[], uint16_t sector_offset);
-static uint8_t _FAT_parse_long_names_(char buff[], uint8_t start_idx,
-                                      uint16_t sector_offset, uint8_t buff_idx,
-                                      uint8_t len);
+        decimals	number of digits after the dot
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_fwriteFloat(FAT_FILE *fp, float nr, uint8_t nrOfDecimals);
+/*______________________________________________________________________________________________
+        Wrapper function of fwrite() used to convert a number into a string and
+write it to a file
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_fwriteInt(FAT_FILE *fp, INT_SIZE nr);
+
+/*______________________________________________________________________________________________
+        Wrapper function of fwrite() used to write a string
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_fwriteString(FAT_FILE *fp, const char *string);
+/*______________________________________________________________________________________________
+        Write data to the file at the file offset pointed by read/write pointer.
+        The write pointer advances with each byte written.
+        CAUTION: running other functions will overwrite the common data buffer
+causing the loss of unsaved data. Use fsync() before using any other function
+including fseek().
+
+        fp			Pointer to the file object structure
+        buff		Pointer to the data to be written
+        btw			Number of bytes to write
+        bw			Pointer to the variable to return number of
+bytes written
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_fwrite(FAT_FILE *fp, const void *buff, uint16_t btw,
+                       uint16_t *bw);
+/*______________________________________________________________________________________________
+        Truncates the file size to the current file read/write pointer
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_ftruncate(FAT_FILE *fp);
+/*______________________________________________________________________________________________
+        Flush cached data of the writing file
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_fsync(FAT_FILE *fp);
+/*______________________________________________________________________________________________
+        Open a file using it's name. The search will be made inside the active
+directory.
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_fopen(FAT_DIR *dir_p, FAT_FILE *file_p, char *file_name);
+/*______________________________________________________________________________________________
+        Open a file by index. The search will be made inside the active
+directory.
+_______________________________________________________________________________________________*/
+FAT_FRESULT FAT_fopenByIndex(FAT_DIR *dir_p, FAT_FILE *file_p, uint16_t idx);
+/*______________________________________________________________________________________________
+        Read data from a file. Each time the function will return a pointer to
+the main buffer array containing a block of data that must be used before
+running other functions that might overwrite the main buffer. The main buffer is
+used to preserve RAM. The file must be opened using the appropriate function
+before it can be read.
+_______________________________________________________________________________________________*/
+uint8_t *FAT_fread(FAT_FILE *file_p);
+/*______________________________________________________________________________________________
+        Return the file pointer
+_______________________________________________________________________________________________*/
+FSIZE_t FAT_getFptr(FAT_FILE *fp);
+/*______________________________________________________________________________________________
+        Move the file pointer to end of file. Wrapper of fseek().
+_______________________________________________________________________________________________*/
+void FAT_fseekEnd(FAT_FILE *fp);
+/*______________________________________________________________________________________________
+        Move the file pointer x number of bytes. fptr must not be greater
+        than the file size in bytes.
+_______________________________________________________________________________________________*/
+void FAT_fseek(FAT_FILE *fp, FSIZE_t fptr);
+/*______________________________________________________________________________________________
+        Used to check for the End Of File
+_______________________________________________________________________________________________*/
+bool FAT_feof(FAT_FILE *fp);
+/*______________________________________________________________________________________________
+        Used to check if an error occurs during file read
+_______________________________________________________________________________________________*/
+uint8_t FAT_ferror(FAT_FILE *fp);
+/*______________________________________________________________________________________________
+        Clear the error flag
+_______________________________________________________________________________________________*/
+void FAT_fclear_error(FAT_FILE *fp);
+/*______________________________________________________________________________________________
+        The filename is available immediately only after a function that
+provides the file info. To preserve memory only a single filename array is used
+so when multiple files are active or functions that open a path are used those
+will modify the filename buffer.
+_______________________________________________________________________________________________*/
+char *FAT_getFilename(void);
+/*______________________________________________________________________________________________
+        Return the index of the active item inside the opened directory
+_______________________________________________________________________________________________*/
+uint16_t FAT_getItemIndex(FAT_DIR *dir_p);
+/*______________________________________________________________________________________________
+        Return the file size in bytes
+_______________________________________________________________________________________________*/
+FSIZE_t FAT_getFileSize(FAT_FILE *finfo_p);
+uint16_t FAT_getWriteYear(FAT_FILE *finfo_p);
+uint8_t FAT_getWriteMonth(FAT_FILE *finfo_p);
+uint8_t FAT_getWriteDay(FAT_FILE *finfo_p);
+uint8_t FAT_getWriteHour(FAT_FILE *finfo_p);
+uint8_t FAT_getWriteMinute(FAT_FILE *finfo_p);
+uint8_t FAT_getWriteSecond(FAT_FILE *finfo_p);
+bool FAT_attrIsFolder(FAT_FILE *finfo_p);
+bool FAT_attrIsFile(FAT_FILE *finfo_p);
+bool FAT_attrIsHidden(FAT_FILE *finfo_p);
+bool FAT_attrIsSystem(FAT_FILE *finfo_p);
+bool FAT_attrIsReadOnly(FAT_FILE *finfo_p);
+bool FAT_attrIsArchive(FAT_FILE *finfo_p);
 
 #endif /* FAT_H_ */
