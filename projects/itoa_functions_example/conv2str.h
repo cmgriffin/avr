@@ -16,9 +16,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-char *CONV2STR_u16(char *s, uint16_t v, uint8_t fp, bool rj, bool neg_sign);
+char *CONV2STR_fptostr31(char *s, int16_t v, uint8_t fp);
+// char *CONV2STR_fptostr31(char *s, int16_t v);
 
-// char *CONV2STR_fptostr31(char *s, int16_t v, uint8_t fp);
-char *CONV2STR_fptostr31(char *s, int16_t v);
+char *CONV2STR_fptostr31rj(char *s, int16_t v, uint8_t fp);
+
+char *CONV2STR_fptostrU16(char *s, uint16_t v, uint8_t fp, bool rj,
+                          bool neg_sign);
+
+char *CONV2STR_fptostrI16(char *s, uint16_t v, uint8_t fp, bool rj);
 
 #endif // CONV2STR

@@ -20,11 +20,11 @@ int main(void)
     for (int16_t v = 1; !(v & 0x4000); v *= 2)
     {
         print(itoa(v, s, 10));
-        print_p(": ");
+        print_p(":\t");
 
-        for (uint8_t fp = 0; fp < 8; fp++)
+        for (uint8_t fp = 0; fp < 6; fp++)
         {
-            print(CONV2STR_fptostr31(s, v));
+            print(CONV2STR_fptostrI16(s, v, fp, true));
             print_p(" ");
         }
         print_p("\n");

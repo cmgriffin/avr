@@ -14,7 +14,7 @@ PROGRAMMER_TYPE = arduino
 ## If you move either the current folder or the Library folder, you'll 
 ##  need to change this path to match.
 LIBDIR = ../../libs/avr_lib
-
+LIBSRCS = 
 
 ## The name of your project (without the .c)
 # TARGET = blinkLED
