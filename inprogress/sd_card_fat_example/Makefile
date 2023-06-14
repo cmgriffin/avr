@@ -13,7 +13,7 @@ PROGRAMMER_TYPE = arduino
 ## A directory for common include files and the simple USART library.
 ## If you move either the current folder or the Library folder, you'll 
 ##  need to change this path to match.
-LIBDIR = ../../libs/avr_lib
+LIBDIR = ../../lib
 LIBSRCS = sd/fat sd/sd sd/utils
 
 ## The name of your project (without the .c)
