@@ -1,6 +1,7 @@
 #include "sd/sd.h"
 #include "sd_conf.h"
 #include <avrlibdefs.h>
+#include <debug_minimal.h>
 #include <global.h>
 #include <spi.h>
 #include <util/delay.h>
@@ -10,6 +11,16 @@
 **************************************************************/
 #define SPI_CARD_CS_DISABLE() GPIO_setValueHigh(&(GPIO_TypeDef)SD_CS_PIN);
 #define SPI_CARD_CS_ENABLE()  GPIO_setValueLow(&(GPIO_TypeDef)SD_CS_PIN);
+
+#ifdef DEBUG
+#define SD_DEBUG_print(s)    DEBUG_print("[SD]: " s)
+#define SD_DEBUG_println(s)  DEBUG_println("[SD]: " s)
+#define SD_DEBUG_printnum(i) DEBUG_printnum(i)
+#else
+#define SD_DEBUG_print(s)
+#define SD_DEBUG_println(s)
+#define SD_DEBUG_printnum(i)
+#endif
 
 // R1 Response
 #define PARAM_ERROR(X)     X & 0b01000000
@@ -169,18 +180,23 @@ SD_RETURN_CODES sd_init(void)
 
     // SPI Setup
     // SPI_Init();
+
+    SD_DEBUG_println("Init started");
+
+    GPIO_setOutput(&(GPIO_TypeDef)SD_CS_PIN);
+
     SPI_init(&(SPI_Init_Typedef){.interuptEn       = false,
                                  .dataOrderLsb     = false,
                                  .masterSelect     = true,
                                  .clkPolHigh       = false,
                                  .clkPhaseTrailing = false,
-                                 .clkDoubleSpeed   = true,
+                                 .clkDoubleSpeed   = false,
                                  .clkSelect        = SPI_SPCR_CLK_DIV4});
 
     // Optional - Card detect pin set as input high
     // CARD_DETECT_PORT |= (1 << CARD_DETECT_PIN);
     // CARD_DETECT_DDR &= ~(1 << CARD_DETECT_PIN);
-
+    SD_DEBUG_println("ios configured");
     // Give SD card time to power up
     _delay_ms(1);
 
@@ -189,6 +205,8 @@ SD_RETURN_CODES sd_init(void)
     sd_deassert_cs();
     for (uint8_t i = 0; i < 10; i++)
         SPI_transferByte(0xFF);
+
+    SD_DEBUG_println("sync completed");
 
     // Card powers up in SD Bus protocol mode and switch to SPI
     // when the Chip Select line is driven low and CMD0 is sent.
@@ -200,6 +218,7 @@ SD_RETURN_CODES sd_init(void)
     // Argument is 0x00 for the reset command, precalculated checksum
     while (SD_Response[0] != 0x01)
     {
+        SD_DEBUG_println("reset attempt");
         // Assert chip select
         sd_assert_cs();
 
@@ -222,6 +241,8 @@ SD_RETURN_CODES sd_init(void)
         }
     }
 
+    SD_DEBUG_println("reset completed");
+
     // Send CMD8 - SEND_IF_COND (Send Interface Condition) - R7 response (or R1
     // for < V2 cards) Sends SD Memory Card interface condition that includes
     // host supply voltage information and asks the accessed card whether card
@@ -238,8 +259,8 @@ SD_RETURN_CODES sd_init(void)
     sd_deassert_cs();
 
     // Enable maximum SPI speed
-    SPCR &= ~(1 << SPR1); // set clock rate fosc/2
-
+    SPCR &= ~((1 << SPR1) | (1 << SPR0)); // set clock rate fosc/2
+    SPSR |= (1 << SPI2X);
     // Select initialization sequence path
     if (SD_Response[0] == 0x01)
     {
@@ -316,6 +337,8 @@ SD_RETURN_CODES sd_init(void)
     // lengths. Block length can be set in Standard Capacity SD cards using
     // CMD16 (SET_BLOCKLEN). For SDHC and SDXC cards the block length is always
     // set to 512 bytes.
+
+    SD_DEBUG_println("Init completed");
 
     return SD_OK;
 }

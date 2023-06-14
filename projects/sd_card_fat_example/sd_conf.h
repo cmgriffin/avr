@@ -1,0 +1,1 @@
+#define SD_CS_PIN GPIO_D10

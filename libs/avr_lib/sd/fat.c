@@ -3,8 +3,19 @@
 #include "sd.h"
 #include "utils.h"
 #include <avr/io.h>
+#include <debug_minimal.h>
 #include <sd/fat.h>
 #include <string.h>
+
+#ifdef DEBUG
+#define FAT_DEBUG_print(s)    DEBUG_print("[FAT]: " s)
+#define FAT_DEBUG_println(s)  DEBUG_println("[FAT]: " s)
+#define FAT_DEBUG_printnum(i) DEBUG_printnum(i)
+#else
+#define FAT_DEBUG_print(s)
+#define FAT_DEBUG_println(s)
+#define FAT_DEBUG_printnum(i)
+#endif
 
 /*************************************************************
         PRIVATE
@@ -57,7 +68,7 @@ static FAT_DIR *bufferModBy;
 static bool set_null = false; // used to add null terminator to long file names
 static bool null_is_set = false; //
 
-static FAT fat_obj; // card object
+static FAT fat_obj;              // card object
 static FAT *fat = &fat_obj;
 
 /*************************************************************
@@ -69,7 +80,7 @@ FAT_MOUNT_RESULT FAT_mountVolume(void)
     uint8_t fs_partition_type = 0; // 4, 6 or 14 for FAT16
     uint8_t BPB_NumFATs       = 0; // number of FATs
     uint16_t i;
-    uint16_t BPB_RsvdSecCnt = 0; // reserved sector count
+    uint16_t BPB_RsvdSecCnt = 0;   // reserved sector count
     uint16_t BPB_RootEntCnt =
         0; // number of directory entries in the root directory (N.A. for FAT32)
     uint16_t BPB_TotSec16 = 0; // total number of sectors on the disk/partition
@@ -84,6 +95,8 @@ FAT_MOUNT_RESULT FAT_mountVolume(void)
 
     // Assign function to pointer
     // card_read_single_block = &sd_read_single_block;
+
+    FAT_DEBUG_println("mount volume started");
 
     // Card initialization
     fat->fs_low_level_code = sd_init();
@@ -296,6 +309,9 @@ FAT_MOUNT_RESULT FAT_mountVolume(void)
     // fat->FATDataSize)) - fat->CountofClusters - 2;
 
     fat->entries_per_sector = fat->BPB_BytsPerSec / 32;
+
+    FAT_DEBUG_println("mount volume completed");
+
     return MR_OK;
 }
 
@@ -738,7 +754,7 @@ static FAT_FRESULT _FAT_dirRegister(const char *path, uint8_t task)
     {
         dir_entries_necessary++; // +1 because there is a remainder
     }
-    dir_entries_necessary++; // +1 for SFN entry
+    dir_entries_necessary++;     // +1 for SFN entry
 
     // Set the ordinal number of the last entry
     lfn_ordinal = (dir_entries_necessary - 1) |
@@ -918,7 +934,7 @@ static FAT_FRESULT _FAT_dirRegister(const char *path, uint8_t task)
                 SD_Buffer[(entry_start * 32) + FAT_LONG_DIR_ATTR] =
                     FAT_FILE_ATTR_LONG_NAME; // LFN fragment attribute
                 SD_Buffer[(entry_start * 32) + FAT_LONG_DIR_CHECKSUM] =
-                    lfn_checksum; // LFN fragment checksum
+                    lfn_checksum;            // LFN fragment checksum
             }
             else if (empty_entries == 1)
             { // Set SFN entry
@@ -1300,8 +1316,9 @@ FAT_FRESULT FAT_fsync(FAT_FILE *fp)
     // Write to file
     sd_write_single_block(fp->file_start_sector + fp->file_active_sector,
                           SD_Buffer);
-    if (SD_ResponseToken != 0x05)
-        return FR_DEVICE_ERR;
+    // BUG: for some reason my sd card returns != 0x05 but does sucessfully
+    // write if (SD_ResponseToken != 0x05)
+    //     return FR_DEVICE_ERR;
 
     // Update file size
     if (fp->file_update_size == true && fp->fptr > fp->file_size)

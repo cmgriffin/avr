@@ -8,6 +8,7 @@ Description:
 
         For complete details visit:
         https://www.programming-electronics-diy.xyz/2022/07/sd-memory-card-library-for-avr.html
+        http://www.rjhcoding.com/avrc-sd-interface-1.php
 
 Author:
         Liviu Istrate
