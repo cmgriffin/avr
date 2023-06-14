@@ -8,6 +8,8 @@
               // defined
 
 // Debugging
-#define DEBUG // enable debugging
+#define DEBUG   // enable debugging
+
+#define FP_BITS 8
 
 #endif
