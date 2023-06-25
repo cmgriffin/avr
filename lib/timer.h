@@ -12,6 +12,7 @@
 #define __TIMER__
 
 #include "global.h"
+#include "timer_conf.h"
 #include <avr/io.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -143,8 +144,8 @@ void TIMER2_init(const Timer_Init_Typedef *init, bool clearFirst);
 #endif
 
 /**
- * @brief A simplified and compact initialization function for the tick functions
- * Sets up the timer defined by TIMER_TICK_N to generate TOV interupts
+ * @brief A simplified and compact initialization function for the tick
+ * functions Sets up the timer defined by TIMER_TICK_N to generate TOV interupts
  *
  * @param clockSelect value to set for CS0-3 of the targeted timer
  */
