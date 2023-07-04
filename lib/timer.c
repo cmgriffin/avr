@@ -4,6 +4,7 @@
 #include "timer.h"
 
 #include <avr/interrupt.h>
+#include <avr/io.h>
 #include <util/atomic.h>
 
 #include "debug.h"

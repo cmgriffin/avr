@@ -89,7 +89,7 @@ debug:
 	@echo
 	@echo "Source files:"   $(SOURCES)
 	@echo "Header files:"   $(HEADERS)
-	@echo "MCU"  $(MCU)
+	@echo "MCU:"  $(MCU)
 	@echo	
 
 # Optionally create listing file from .elf
