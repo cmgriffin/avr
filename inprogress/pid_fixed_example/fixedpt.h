@@ -12,6 +12,7 @@ typedef int32_t Q15_16;
 #define FIXEDPT_MULT(a, b)                                         \
     ((Q7_8)(((Q15_16)a * (Q15_16)b + (1 << (FIXEDPT_BITS - 1))) >> \
             FIXEDPT_BITS))
-#define FIXEDPT_DIV(a, b) ((Q7_8)((((Q15_16)a) << FIXEDPT_BITS) / ((Q15_16)b)))
+#define FIXEDPT_DIV(a, b) \
+    ((Q7_8)(((((Q15_16)a) << FIXEDPT_BITS) + ((Q15_16)b >> 1)) / ((Q15_16)b)))
 
 #endif /* FIXEDPT_H */

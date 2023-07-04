@@ -8,36 +8,39 @@ void PID_init(PID_t *pid, PID_init_t *init)
     pid->ki         = init->ki;
     pid->kd         = init->kd;
     pid->output_max = init->output_max;
-    pid->output_sum = bound(init->starting_output, init->output_max);
+    pid->output_sum = 0;
     pid->last_input = init->starting_input;
 }
 
-double PID_update(PID_t *pid, double input)
+Q7_8 PID_update(PID_t *pid, Q7_8 input)
 {
-    double error   = pid->setpoint - input;
-    double d_input = input - pid->last_input;
+    Q7_8 error            = pid->setpoint - input;
+    Q7_8 d_input          = input - pid->last_input;
+    Q15_16 integrator_max = (Q15_16)pid->output_max << 16;
 
-    pid->output_sum += pid->ki * error;
-    pid->output_sum = bound(pid->output_sum, pid->output_max);
+    pid->output_sum += (Q15_16)pid->ki * error;
+    pid->output_sum = bound(pid->output_sum, integrator_max);
 
-    double p_weight = pid->kp * error;
-    double i_weigth = pid->output_sum;
-    double d_weight = pid->kp * d_input;
+    Q7_8 p_weight   = bound(((Q15_16)pid->kp * error) >> 8, pid->output_max);
+    Q7_8 i_weigth   = pid->output_sum >> 16;
+    Q7_8 d_weight   = pid->kd * d_input;
 
-    double output   = p_weight + i_weigth - d_weight;
+    Q7_8 output     = bound(p_weight + i_weigth - d_weight, pid->output_max);
 
     pid->last_input = input;
 
     return output;
 }
 
-void PID_update_coefficients(PID_t *pid, double Kp, double Ki, double Kd){
-    pid->kp = Kp;
-    pid->output_sum = pid->output_sum * pid->ki / Ki;
-    pid->ki = Ki;
-    pid->kd = Kd;
+void PID_update_coefficients(PID_t *pid, Q7_8 Kp, Q7_8 Ki, Q7_8 Kd)
+{
+    pid->kp         = Kp;
+    pid->output_sum = FIXEDPT_DIV(FIXEDPT_MULT(pid->output_sum, pid->ki), Ki);
+    pid->ki         = Ki;
+    pid->kd         = Kd;
 }
 
-void PID_update_setpoint(PID_t *pid, double setpoint){
+void PID_update_setpoint(PID_t *pid, Q7_8 setpoint)
+{
     pid->setpoint = setpoint;
 }

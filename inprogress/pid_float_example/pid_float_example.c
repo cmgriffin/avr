@@ -24,7 +24,7 @@ int main(void)
                                        .initial_output = 0,
                                        .initial_input  = 0});
 
-    PID_init(&pid, &(PID_init_t){.setpoint        = 1,
+    PID_init(&pid, &(PID_init_t){.setpoint        = 10,
                                  .kp              = 3.06,
                                  .ki              = 0.6,
                                  .kd              = 3.825,
