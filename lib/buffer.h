@@ -71,6 +71,20 @@ static inline bool BUFFER_full(buffer_t *b)
  * @brief
  *
  * @param b
+ * @return true
+ * @return false
+ */
+static inline bool BUFFER_available(buffer_t *b)
+{
+    uint8_t v;
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) { v = b->num_entries; }
+    return v;
+}
+
+/**
+ * @brief
+ *
+ * @param b
  * @param value
  * @return true
  * @return false
