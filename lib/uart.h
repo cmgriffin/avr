@@ -52,6 +52,13 @@ bool UART_TransmitByte(uint8_t c, bool blocking);
 bool UART_ReceiveByte(uint8_t *c, bool blocking);
 
 /**
+ * @brief Return the number of bytes waiting in rx buffer
+ *
+ * @return uint8_t number of bytes waiting in rx buffer
+ */
+uint8_t UART_available();
+
+/**
  * @brief A UART putChar function for use with stdio functions
  *
  * @param c character to send

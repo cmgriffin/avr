@@ -221,6 +221,15 @@ bool UART_ReceiveByte(uint8_t *c, bool blocking)
 #endif
 }
 
+uint8_t UART_available()
+{
+#ifdef UART_RX_INTERUPT
+    return BUFFER_available(&rxbuff);
+
+#else
+    return bit_is_set(UCSRnA, RXCn) ? 1 : 0;
+#endif
+}
 /**
  * @brief Send a character down the UART
  *
@@ -244,7 +253,8 @@ int UART_putChar(char c, FILE *stream)
 int UART_getChar(FILE *stream)
 {
     static char buff[UART_GETCHAR_BUFFER_SIZE];
-    static char *rxptr; // ptr to the current position in the buffer when reading
+    static char
+        *rxptr; // ptr to the current position in the buffer when reading
 
     return STREAM_getChar(buff, UART_GETCHAR_BUFFER_SIZE, &rxptr, &uart_io,
                           stream);

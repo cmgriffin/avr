@@ -61,4 +61,11 @@ bool UARTSW_TransmitByte(uint8_t c, bool blocking);
 // UARTSW_ReceiveByte( &myReceivedByte );
 bool UARTSW_ReceiveByte(uint8_t *c, bool blocking);
 
+/**
+ * @brief Return the number of bytes available in the RX buffer
+ *
+ * @return uint8_t
+ */
+uint8_t UARTSW_available();
+
 #endif // __UARTSW__

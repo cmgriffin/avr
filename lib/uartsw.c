@@ -144,6 +144,8 @@ bool UARTSW_ReceiveByte(uint8_t *c, bool blocking)
     return true;
 }
 
+uint8_t UARTSW_available() { return BUFFER_available(&rxbuff); }
+
 ISR(TIMER1_COMPA_vect)
 {
     if (TxBitNum)
