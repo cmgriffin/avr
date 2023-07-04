@@ -200,8 +200,7 @@ bool DS18B20_singleReadRom(GPIO_TypeDef *pin, DS18B20_rom_t *rom)
     return true;
 }
 
-bool DS18B20_readTemp(GPIO_TypeDef *pin, DS18B20_rom_t *rom, int32_t *temp,
-                      uint8_t exp)
+bool DS18B20_readTempValue(GPIO_TypeDef *pin, DS18B20_rom_t *rom, int16_t *temp)
 {
 
     if (!DS18B20_isComplete(pin))
@@ -224,8 +223,18 @@ bool DS18B20_readTemp(GPIO_TypeDef *pin, DS18B20_rom_t *rom, int32_t *temp,
 
     __scratchpad_t scratch;
     __readScratchpad(pin, &scratch);
-    *temp = __calcTemp(scratch.x[iTEMP_LSB], scratch.x[iTEMP_MSB], exp);
+    *temp = (int16_t)((uint16_t)scratch.x[iTEMP_LSB] +
+                      ((uint16_t)scratch.x[iTEMP_MSB] << 8));
     return true;
+}
+
+bool DS18B20_readTemp(GPIO_TypeDef *pin, DS18B20_rom_t *rom, int32_t *temp,
+                      uint8_t exp)
+{
+    int16_t raw;
+    bool result = DS18B20_readTempValue(pin, rom, &raw);
+    *temp       = __calcTemp(raw & 0xff, (raw >> 8), exp);
+    return result;
 }
 
 bool DS18B20_readTempBlocking(GPIO_TypeDef *pin, DS18B20_rom_t *rom,

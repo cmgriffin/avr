@@ -33,6 +33,9 @@ bool DS18B20_isComplete(GPIO_TypeDef *pin);
 uint8_t DS18B20_search(GPIO_TypeDef *pin, uint8_t searchCmd,
                        DS18B20_rom_t *romList, uint8_t maxLen);
 
+bool DS18B20_readTempValue(GPIO_TypeDef *pin, DS18B20_rom_t *rom,
+                           int16_t *temp);
+
 bool DS18B20_readTemp(GPIO_TypeDef *pin, DS18B20_rom_t *rom, int32_t *temp,
                       uint8_t exp);
 
