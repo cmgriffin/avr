@@ -42,15 +42,15 @@ typedef struct
 #define TIMER0_WGM_PWM_PHA_OCRA  0x5
 #define TIMER0_WGM_PWM_FAST_OCRA 0x7
 
-#define TIMER_OCA_OFF            0x0
-#define TIMER_OCA_TOGGLE         0x1
-#define TIMER_OCA_CLEAR          0x2
-#define TIMER_OCA_SET            0x3
+#define TIMER_OCB_OFF            0x00
+#define TIMER_OCB_TOGGLE         0x10
+#define TIMER_OCB_CLEAR          0x20
+#define TIMER_OCB_SET            0x30
 
-#define TIMER_OCB_OFF            0x0
-#define TIMER_OCB_TOGGLE         0x4
-#define TIMER_OCB_CLEAR          0x8
-#define TIMER_OCB_SET            0xC
+#define TIMER_OCA_OFF            0x00
+#define TIMER_OCA_TOGGLE         0x40
+#define TIMER_OCA_CLEAR          0x80
+#define TIMER_OCA_SET            0xC0
 
 #define TIMER_INTERUPT_NONE      0
 #define TIMER_INTERUPT_TOV       _BV(TOIE0)
