@@ -69,7 +69,7 @@ void TIMER_delayTicks(uint16_t ticks)
 
     do
     {
-    } while (TIMER_getTicks() < start + ticks);
+    } while (TIMER_getTicks() - start < ticks);
 }
 
 void TIMER_delay_ms(uint16_t ms)
