@@ -22,7 +22,7 @@ double PID_update(PID_t *pid, double input)
 
     double p_weight = pid->kp * error;
     double i_weigth = pid->output_sum;
-    double d_weight = pid->kp * d_input;
+    double d_weight = pid->kd * d_input;
 
     double output   = p_weight + i_weigth - d_weight;
 
@@ -31,13 +31,15 @@ double PID_update(PID_t *pid, double input)
     return output;
 }
 
-void PID_update_coefficients(PID_t *pid, double Kp, double Ki, double Kd){
-    pid->kp = Kp;
+void PID_update_coefficients(PID_t *pid, double Kp, double Ki, double Kd)
+{
+    pid->kp         = Kp;
     pid->output_sum = pid->output_sum * pid->ki / Ki;
-    pid->ki = Ki;
-    pid->kd = Kd;
+    pid->ki         = Ki;
+    pid->kd         = Kd;
 }
 
-void PID_update_setpoint(PID_t *pid, double setpoint){
+void PID_update_setpoint(PID_t *pid, double setpoint)
+{
     pid->setpoint = setpoint;
 }

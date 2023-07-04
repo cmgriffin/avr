@@ -37,13 +37,11 @@ int16_t MODEL_update(MODEL_t *model, int16_t input)
     // int16_t new_output = ((model->kp / model->tau) * model->input_hist[0]) +
     //                      (model->output * 1 - 1 / model->tau);
 
-    Q7_8 o1 = FIXEDPT_MULT(model->kp, model->input_hist[0]);
-    o1      = FIXEDPT_DIV(o1, model->tau);
-    Q7_8 o2 = FIXEDPT_MULT(model->output, model->tau);
-    o2 -= FIXEDPT_CONST(1);
-    o2              = FIXEDPT_DIV(o2, model->tau);
-    Q7_8 new_output = o1 + o2;
+    Q7_8 new_output = FIXEDPT_MULT(model->kp, model->input_hist[0]);
+    new_output -= model->output;
+    new_output += FIXEDPT_MULT(model->tau, model->output);
+    new_output    = FIXEDPT_DIV(new_output, model->tau);
 
-    model->output   = new_output;
+    model->output = new_output;
     return new_output;
 }
