@@ -81,13 +81,13 @@ void TIMER_delay_ms(uint16_t ms)
     TIMER_delayTicks(ticks);
 }
 
-uint16_t TIMER_time_ms()
-{
-    uint32_t ticks = (uint32_t)TIMER_getTicks();
-    _DEBUG("current ticks=%d", ticks);
-    return (uint16_t)((TIMER_TICK_CLK_DIV * ticks + (F_CPU / 2000)) /
-                      (F_CPU / 1000));
-}
+// uint16_t TIMER_time_ms()
+// {
+//     uint32_t ticks = (uint32_t)TIMER_getTicks();
+//     _DEBUG("current ticks=%d", ticks);
+//     return (uint16_t)((TIMER_TICK_CLK_DIV * ticks + (F_CPU / 2000)) /
+//                       (F_CPU / 1000));
+// }
 
 void TIMER_attach_tick_func(void (*func)()) { tick_func = func; }
 

@@ -143,6 +143,8 @@ void TIMER2_init(const Timer_Init_Typedef *init, bool clearFirst);
 #pragma message "TIMER_delay_ms MAX DELAY = " STRING(__TIMER_TICK_MAX_MS_DELAY)
 #endif
 
+#define TIMER_TICKS_PER_MS F_CPU / TIMER_TICK_CLK_DIV / 1000 + 0.5
+
 /**
  * @brief A simplified and compact initialization function for the tick
  * functions Sets up the timer defined by TIMER_TICK_N to generate TOV interupts
@@ -190,7 +192,7 @@ void TIMER_detach_tick_func();
  * @brief Return the current tick counter value converted to ms
  *
  */
-uint16_t TIMER_time_ms();
+// uint16_t TIMER_time_ms();
 
 #endif // TIMER_TICK_N
 
