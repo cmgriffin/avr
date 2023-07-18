@@ -1,4 +1,6 @@
 #include "devices/ds18b20.h"
+#include "global.h"
+
 #include <gpio.h>
 #include <util/crc16.h>
 #include <util/delay.h>
@@ -222,7 +224,10 @@ bool DS18B20_readTempValue(GPIO_TypeDef *pin, DS18B20_rom_t *rom, int16_t *temp)
     }
 
     __scratchpad_t scratch;
-    __readScratchpad(pin, &scratch);
+    if (!__readScratchpad(pin, &scratch))
+    {
+        return false;
+    }
     *temp = (int16_t)((uint16_t)scratch.x[iTEMP_LSB] +
                       ((uint16_t)scratch.x[iTEMP_MSB] << 8));
     return true;
