@@ -18,9 +18,9 @@ static inline void DEBUG_printint(int16_t i)
 static inline void DEBUG_printlong(int32_t l)
 {
     char s[12];
-    UART_printStr(ltoa(i, s, 10));
+    UART_printStr(ltoa(l, s, 10));
 }
-#define DEBUG_printnum(i) DEBUG_printnum(i)
+#define DEBUG_printnum(i) DEBUG_printlong(i)
 #else
 #define DEBUG_print(s)
 #define DEBUG_println(s)
