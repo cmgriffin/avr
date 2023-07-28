@@ -4,10 +4,10 @@
 #include <uart.h>
 #include <util/delay.h>
 
-#include "autotune.h"
-#include "model.h"
-#include "pid.h"
 #include "utils.h"
+#include <control/model/model.h>
+#include <control/pid_floatpt/autotune.h>
+#include <control/pid_floatpt/pid.h>
 
 MODEL_t model;
 PID_t pid;

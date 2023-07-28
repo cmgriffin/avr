@@ -14,7 +14,9 @@ PROGRAMMER_TYPE = arduino
 ## If you move either the current folder or the Library folder, you'll 
 ##  need to change this path to match.
 LIBDIR = ../../lib
-
+LIBSRCS = 	control/pid_fixedpt/autotune \
+ 			control/pid_fixedpt/pid \
+			control/model/model
 
 ## The name of your project (without the .c)
 # TARGET = blinkLED

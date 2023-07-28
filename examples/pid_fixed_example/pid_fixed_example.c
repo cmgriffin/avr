@@ -5,10 +5,10 @@
 #include <util/delay.h>
 
 // #include "autotune.h"
-#include "fixedpt.h"
-#include "model.h"
-#include "pid.h"
 #include "utils.h"
+#include <control/model/model.h>
+#include <control/pid_fixedpt/fixedpoint_utils.h>
+#include <control/pid_fixedpt/pid.h>
 
 MODEL_t model;
 PID_t pid;

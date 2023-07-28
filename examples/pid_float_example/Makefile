@@ -5,7 +5,7 @@
 ##########------------------------------------------------------##########
 
 MCU   = atmega328p
-SERIAL_PORT = COM6
+SERIAL_PORT = COM9
 SERIAL_BAUD = 9600
 #UPLOAD_BAUD = 57600 # arduino nano clone needs default overrided
 PROGRAMMER_TYPE = arduino
@@ -14,7 +14,9 @@ PROGRAMMER_TYPE = arduino
 ## If you move either the current folder or the Library folder, you'll 
 ##  need to change this path to match.
 LIBDIR = ../../lib
-
+LIBSRCS = 	control/pid_floatpt/autotune \
+ 			control/pid_floatpt/pid \
+			control/model/model
 
 ## The name of your project (without the .c)
 # TARGET = blinkLED
