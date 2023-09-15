@@ -35,7 +35,10 @@ static inline void __I2C_start()
 }
 
 // send an I2C stop
-static inline void __I2C_stop() { TWCR = (_BV(TWINT) | _BV(TWEN) | _BV(TWSTO)); }
+static inline void __I2C_stop()
+{
+    TWCR = (_BV(TWINT) | _BV(TWEN) | _BV(TWSTO));
+}
 
 // Read a byte and send ACK
 static inline uint8_t __I2C_readAck(void)
