@@ -58,7 +58,7 @@ int16_t PID_update(PID_t *pid, int16_t input)
     pid->last_input = input;
 
     if (pid->deadband*-1 <= error && error <= pid->deadband){
-        return pid->last_output;
+        return 0;
     }
     
     // handle the integrator
