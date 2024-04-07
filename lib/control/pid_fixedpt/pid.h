@@ -9,10 +9,12 @@ typedef struct
     int16_t kp;
     int16_t ki;
     int16_t kd;
+    int16_t deadband;
     int16_t output_max;
     int32_t output_sum;
     int8_t sat;
     int16_t last_input;
+    int16_t last_output;
 } PID_t;
 
 typedef struct
@@ -21,6 +23,7 @@ typedef struct
     int16_t kp;
     int16_t ki;
     int16_t kd;
+    int16_t deadband;
     int16_t output_max;
     int16_t starting_output;
     int16_t starting_input;
