@@ -34,7 +34,7 @@ void print_temps(GPIO_TypeDef *pin, DS18B20_rom_t *roms, uint8_t len)
 
 int main(void)
 {
-    GPIO_TypeDef ds_pin = A5;
+    GPIO_TypeDef ds_pin = GPIO_A0;
     UART_init();
 
     DS18B20_rom_t device_roms[6];
@@ -53,8 +53,10 @@ int main(void)
         {
         }
         int32_t temp;
-        DS18B20_readTemp(&ds_pin, NULL, &temp, 4);
-        printf("%ld\n", temp);
+        if (DS18B20_readTemp(&ds_pin, NULL, &temp, 4))
+        {
+            printf("%ld\n", temp);
+        }
         // print_temps(&ds_pin, device_roms, devices_found);
     }
     return 0;

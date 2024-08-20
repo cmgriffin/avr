@@ -15,5 +15,7 @@ PROGRAMMER_TYPE = arduino
 ##  need to change this path to match.
 LIBDIR = ../../lib
 
+LIBSRCS = devices/ds18b20
+
 ## Include the library makefile which has all project non-specific details
 include $(LIBDIR)/include.mak
