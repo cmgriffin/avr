@@ -43,10 +43,12 @@ void PID_init(PID_t *pid, PID_init_t *init)
     pid->kp         = init->kp;
     pid->ki         = init->ki;
     pid->kd         = init->kd;
+    pid->deadband   = init->deadband;
     pid->output_max = init->output_max;
     pid->output_sum = 0;
     pid->sat        = 0;
     pid->last_input = init->starting_input;
+    pid->last_output = 0;
 }
 
 int16_t PID_update(PID_t *pid, int16_t input)
@@ -55,6 +57,10 @@ int16_t PID_update(PID_t *pid, int16_t input)
     int16_t d_input = input - pid->last_input;
     pid->last_input = input;
 
+    if (pid->deadband*-1 <= error && error <= pid->deadband){
+        return 0;
+    }
+    
     // handle the integrator
     if (!((pid->sat < 0 && error < 0) || (pid->sat > 0 && error > 0)))
     {
@@ -72,6 +78,8 @@ int16_t PID_update(PID_t *pid, int16_t input)
                                               (pid->output_sum >> SCALE_FACTOR) -
                                               (d_term >> SCALE_FACTOR),
                                           pid->output_max);
+
+    pid->last_output = output;
 
     DEBUG_print("PID_state: output_sum=");
     DEBUG_printnum(pid->output_sum);
