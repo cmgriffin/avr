@@ -21,7 +21,7 @@
  * @brief Convert float constant to fixed point int
  *
  */
-#define FIXEDPT_CONST(n) ((int16_t)(n * (1 << SCALE_FACTOR)))
+#define FIXEDPT_CONST(n) ((int16_t)((n) * (1 << SCALE_FACTOR) + 0.5))
 
 /**
  * @brief Multiply fixed point int a with fixed point int b

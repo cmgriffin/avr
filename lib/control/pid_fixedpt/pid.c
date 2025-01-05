@@ -1,5 +1,8 @@
-#include "control/pid_fixedpt/pid.h"
+#if __has_include("pid_conf.h")
+#include "pid_conf.h"
+
 #include "control/pid_fixedpt/fixedpoint_utils.h"
+#include "control/pid_fixedpt/pid.h"
 #include "utils.h"
 #include <debug_minimal.h>
 #include <stdlib.h>
@@ -39,15 +42,15 @@ static int32_t __satlimit(int8_t *sat, int32_t x, int32_t limit)
 
 void PID_init(PID_t *pid, PID_init_t *init)
 {
-    pid->setpoint   = init->setpoint;
-    pid->kp         = init->kp;
-    pid->ki         = init->ki;
-    pid->kd         = init->kd;
-    pid->deadband   = init->deadband;
-    pid->output_max = init->output_max;
-    pid->output_sum = 0;
-    pid->sat        = 0;
-    pid->last_input = init->starting_input;
+    pid->setpoint    = init->setpoint;
+    pid->kp          = init->kp;
+    pid->ki          = init->ki;
+    pid->kd          = init->kd;
+    pid->deadband    = init->deadband;
+    pid->output_max  = init->output_max;
+    pid->output_sum  = 0;
+    pid->sat         = 0;
+    pid->last_input  = init->starting_input;
     pid->last_output = 0;
 }
 
@@ -57,10 +60,14 @@ int16_t PID_update(PID_t *pid, int16_t input)
     int16_t d_input = input - pid->last_input;
     pid->last_input = input;
 
-    if (pid->deadband*-1 <= error && error <= pid->deadband){
+#ifdef DEADBAND_ON_INPUT
+
+    if (pid->deadband * -1 <= error && error <= pid->deadband)
+    {
         return 0;
     }
-    
+#endif
+
     // handle the integrator
     if (!((pid->sat < 0 && error < 0) || (pid->sat > 0 && error > 0)))
     {
@@ -78,9 +85,17 @@ int16_t PID_update(PID_t *pid, int16_t input)
                                               (pid->output_sum >> SCALE_FACTOR) -
                                               (d_term >> SCALE_FACTOR),
                                           pid->output_max);
+#ifndef DEADBAND_ON_INPUT
+
+    if (pid->deadband * -1 <= output && output <= pid->deadband)
+    {
+        output = 0;
+    }
+#endif
 
     pid->last_output = output;
 
+#ifdef PID_DEBUG
     DEBUG_print("PID_state: output_sum=");
     DEBUG_printnum(pid->output_sum);
     DEBUG_print(" sat=");
@@ -96,6 +111,7 @@ int16_t PID_update(PID_t *pid, int16_t input)
     DEBUG_print(" output=");
     DEBUG_printnum(output);
     DEBUG_print("\n");
+#endif
 
     return output;
 }
@@ -119,3 +135,5 @@ void PID_reset(PID_t *pid)
     pid->sat        = 0;
     pid->last_input = 0;
 }
+
+#endif

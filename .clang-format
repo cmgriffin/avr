@@ -9,8 +9,7 @@ AlignConsecutiveBitFields: true
 AlignEscapedNewlines: true
 AlignOperands: true
 AlignTrailingComments: true
-AlignEscapedNewlines: Left 
-AlignOperands: true
+# AlignEscapedNewlines: Left 
 IncludeBlocks: Preserve
 # ReflowComments: true
 BreakBeforeBraces: Allman
